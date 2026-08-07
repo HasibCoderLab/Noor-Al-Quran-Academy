@@ -47,7 +47,7 @@ export default function Footer() {
               className="inline-flex w-fit items-center gap-2 text-white/80 transition hover:text-accent"
             >
               <span aria-hidden="true">✉</span>
-              {SITE.email}
+              <span className="break-all">{SITE.email}</span>
             </a>
             <a
               href={SITE.whatsapp}
@@ -110,7 +110,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="relative z-10 border-t border-white/10">
-        <div className={`${styles.container} flex flex-col items-center gap-3 py-6 text-center text-xs text-white/60 sm:flex-row sm:justify-between sm:text-left`}>
+        <div className={`${styles.container} flex flex-col items-center gap-3 py-6 text-center text-xs text-white/60 sm:flex-row sm:justify-between sm:text-start`}>
           <p>
             © {new Date().getFullYear()} {SITE.name}. All rights reserved.
           </p>

@@ -57,6 +57,13 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   const applyLang = (code) => {
     setLang(code);
     setLangOpen(false);
@@ -87,10 +94,10 @@ export default function Navbar() {
     >
       <nav className={`${styles.container} flex h-16 items-center justify-between lg:h-20`}>
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5">
           <span className="text-2xl leading-none">🌙</span>
-          <span className="flex flex-col leading-tight">
-            <span className="font-hind-siliguri text-lg font-bold text-primary">
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="font-hind-siliguri truncate text-lg font-bold text-primary">
               {SITE.name}
             </span>
             <span className="text-xs font-medium uppercase tracking-wider text-primary/60">
@@ -100,7 +107,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="absolute left-1/2 hidden -translate-x-1/2 lg:flex lg:items-center lg:gap-8">
+        <div className="absolute left-1/2 hidden -translate-x-1/2 xl:flex xl:items-center xl:gap-8">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -154,7 +161,7 @@ export default function Navbar() {
                   initial="hidden"
                   animate="visible"
                   exit="hidden"
-                  className="absolute right-0 top-full mt-2 w-32 overflow-hidden rounded-xl bg-white p-1 shadow-lg ring-1 ring-primary/10"
+                  className="absolute end-0 top-full mt-2 w-32 overflow-hidden rounded-xl bg-white p-1 shadow-lg ring-1 ring-primary/10"
                 >
                   {LANGS.map((item) => (
                     <li key={item.code}>
@@ -181,7 +188,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop CTA buttons */}
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-3 xl:flex">
           <motion.span variants={hoverScale} className="inline-flex">
             <Link href="/login" className={styles.btnGhost}>
               Login
@@ -200,7 +207,7 @@ export default function Navbar() {
           animate={isOpen ? "open" : "closed"}
           aria-label={isOpen ? "Close menu" : "Open menu"}
           aria-expanded={isOpen}
-          className="relative z-50 flex flex-col items-center justify-center gap-1.5 p-2 lg:hidden"
+          className="relative z-50 flex h-11 w-11 flex-col items-center justify-center gap-1.5 xl:hidden"
         >
           <motion.span
             variants={{ open: { rotate: 45, y: 8 }, closed: { rotate: 0, y: 0 } }}
@@ -227,7 +234,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden"
+            className="xl:hidden"
           >
             <motion.div
               initial="closed"
@@ -295,11 +302,18 @@ export default function Navbar() {
                     Login
                   </Link>
                   <Link
+                    href="/register"
+                    onClick={() => setIsOpen(false)}
+                    className={styles.btnOutline}
+                  >
+                    Register
+                  </Link>
+                  <Link
                     href="/free-trial"
                     onClick={() => setIsOpen(false)}
                     className={styles.btnAccent}
                   >
-                    Free Trial
+                    Book Free Trial
                   </Link>
                 </motion.li>
               </motion.ul>

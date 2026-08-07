@@ -30,7 +30,7 @@ export const styles = {
   badgeGreen: "inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary",
 
   // Forms
-  input: "w-full rounded-lg border border-primary/20 bg-white px-4 py-3 text-sm text-primary outline-none transition placeholder:text-primary/40 focus:border-accent focus:ring-2 focus:ring-accent/30",
+  input: "w-full min-w-0 rounded-lg border border-primary/20 bg-white px-4 py-3 text-base text-primary outline-none transition placeholder:text-primary/40 focus:border-accent focus:ring-2 focus:ring-accent/30",
 
   // Text effects
   gradientText: "bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent",

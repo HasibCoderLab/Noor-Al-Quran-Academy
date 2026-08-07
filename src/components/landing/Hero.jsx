@@ -61,10 +61,10 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link href="/free-trial" className={styles.btnAccent}>
+            <Link href="/free-trial" className={`${styles.btnAccent} w-full sm:w-auto`}>
               Book Free Trial
             </Link>
-            <Link href="/#courses" className={styles.btnOutline}>
+            <Link href="/#courses" className={`${styles.btnOutline} w-full sm:w-auto`}>
               View Courses →
             </Link>
           </div>
@@ -142,7 +142,7 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -left-4 top-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-primary shadow-lg ring-1 ring-primary/10"
+            className="absolute -start-4 top-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-primary shadow-lg ring-1 ring-primary/10"
           >
             <span className="text-accent">✓</span> Free Trial Available
           </motion.div>

@@ -14,10 +14,14 @@
 }
 
 html {
+  max-width: 100%;
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
 body {
+  max-width: 100%;
+  overflow-x: hidden;
   font-family: var(--font-inter), "Hind Siliguri", sans-serif;
   background-color: var(--color-background);
   color: var(--color-primary);
