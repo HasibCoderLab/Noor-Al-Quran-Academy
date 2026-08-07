@@ -15,9 +15,6 @@ const uid = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-const TYPING_MIN = 700;
-const TYPING_MAX = 1200;
-
 export default function NoorAIWindow({ onClose, onMinimize }) {
   const [messages, setMessages] = useState(() => [
     {
@@ -49,25 +46,37 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const sendMessage = (raw) => {
+  const sendMessage = async (raw) => {
     const text = (raw || "").trim();
     if (!text || typing) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: uid(), role: "user", text, time: new Date() },
-    ]);
+    const userMessage = { id: uid(), role: "user", text, time: new Date() };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setTyping(true);
 
-    const delay = TYPING_MIN + Math.random() * (TYPING_MAX - TYPING_MIN);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { id: uid(), role: "ai", text: getAIResponse(text), time: new Date() },
-      ]);
-      setTyping(false);
-    }, delay);
+    const history = [...messages, userMessage]
+      .map((m) => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text }))
+      .slice(-12);
+
+    let aiText = getAIResponse(text);
+    try {
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data?.text) aiText = data.text;
+    } catch {
+      // Network error — fall back to the local demo assistant
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      { id: uid(), role: "ai", text: aiText, time: new Date() },
+    ]);
+    setTyping(false);
   };
 
   const handleKeyDown = (event) => {
