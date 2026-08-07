@@ -5,6 +5,7 @@ import { Inter, Hind_Siliguri, Amiri } from "next/font/google";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import AppToaster from "../components/ui/Toaster";
+import FloatingDock from "../components/floating/FloatingDock";
 import { SITE } from "../data/siteData";
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({ children }) {
         <main className="flex-1">{children}</main>
         <Footer />
         <AppToaster />
+        <FloatingDock />
       </body>
     </html>
   );

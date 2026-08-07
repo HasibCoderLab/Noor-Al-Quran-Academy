@@ -42,3 +42,28 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='none' stroke='%231b4332' stroke-width='1.5' d='M80 40 L54.78 46.12 L68.28 68.28 L46.12 54.78 L40 80 L33.88 54.78 L11.72 68.28 L25.22 46.12 L0 40 L25.22 33.88 L11.72 11.72 L33.88 25.22 L40 0 L46.12 25.22 L68.28 11.72 L54.78 33.88 Z'/%3E%3C/svg%3E");
   background-size: 80px 80px;
 }
+
+/* Hide horizontal scrollbar for chip rows while keeping it scrollable */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Thin, branded scrollbar for the Noor AI chat area */
+.chat-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(27 67 50 / 0.22) transparent;
+}
+.chat-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scroll::-webkit-scrollbar-thumb {
+  background: rgb(27 67 50 / 0.22);
+  border-radius: 9999px;
+}
+.chat-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

@@ -144,3 +144,111 @@ export const hoverLift = {
     transition: { duration: 0.25, ease: "easeOut" },
   },
 };
+
+// Floating assistant: parent staggers its FAB pills vertically when opened.
+export const fabStackContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+  exit: {
+    transition: {
+      staggerChildren: 0.03,
+      staggerDirection: -1,
+    },
+  },
+};
+
+// Floating assistant: each pill pops in with a soft spring.
+export const fabStackItem = {
+  hidden: {
+    opacity: 0,
+    y: 18,
+    scale: 0.8,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 320,
+      damping: 24,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: 10,
+    scale: 0.9,
+    transition: {
+      duration: 0.16,
+      ease: "easeIn",
+    },
+  },
+};
+
+// Noor AI window: scale + fade + rise on open, gentle sink on close.
+export const aiWindowVariants = {
+  hidden: {
+    opacity: 0,
+    y: 56,
+    scale: 0.94,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 28,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: 40,
+    scale: 0.95,
+    transition: {
+      duration: 0.2,
+      ease: "easeIn",
+    },
+  },
+};
+
+// Chat message bubble entrance.
+export const messageIn = {
+  hidden: {
+    opacity: 0,
+    y: 14,
+    scale: 0.97,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 380,
+      damping: 30,
+    },
+  },
+};
+
+// Quick action chip entrance.
+export const chipIn = {
+  hidden: {
+    opacity: 0,
+    y: 8,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.25,
+      ease: "easeOut",
+    },
+  },
+};
