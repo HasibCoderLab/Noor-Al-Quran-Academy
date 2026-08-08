@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 import { SITE, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
-import { bookings } from "../../lib/bookings";
+import { useAuth } from "../../context/AuthContext";
 
 const initialForm = {
   name: "",
@@ -22,13 +22,25 @@ const initialForm = {
 };
 
 export default function FreeTrialPage() {
+  const { user } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => ({
+      ...prev,
+      name: user.name || prev.name,
+      email: user.email || prev.email,
+      whatsapp: user.whatsapp || prev.whatsapp,
+      country: user.country || prev.country,
+    }));
+  }, [user]);
 
   const set = (field) => (event) =>
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.whatsapp.trim()) {
@@ -45,18 +57,36 @@ export default function FreeTrialPage() {
     }
 
     setSubmitting(true);
-    setTimeout(() => {
-      bookings.add({
-        type: "free-trial",
-        ...form,
-        name: form.name.trim(),
-        email: form.email.trim(),
-        whatsapp: form.whatsapp.trim(),
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "free-trial",
+          name: form.name.trim(),
+          email: form.email.trim(),
+          whatsapp: form.whatsapp.trim(),
+          country: form.country.trim(),
+          course: form.course,
+          time: form.time,
+          duration: Number(form.duration),
+          message: form.message.trim(),
+        }),
       });
-      setSubmitting(false);
-      setForm(initialForm);
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        toast.error(data.error || "Could not submit your request. Please try again.");
+        return;
+      }
+
       toast.success("Free trial requested! We will contact you on WhatsApp shortly.");
-    }, 600);
+      setForm(initialForm);
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const selectField = `${styles.input} appearance-none`;

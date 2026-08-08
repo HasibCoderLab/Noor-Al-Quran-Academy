@@ -52,8 +52,10 @@ export function toPublicUser(user) {
     id: String(user._id),
     name: user.name,
     email: user.email,
+    avatar: user.avatar || user.image || user.picture || "",
     country: user.country || "",
     whatsapp: user.whatsapp || "",
     role: user.role,
+    createdAt: user.createdAt || "",
   };
 }

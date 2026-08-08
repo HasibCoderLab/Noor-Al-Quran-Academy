@@ -16,6 +16,13 @@ const SEED_USERS = [
     country: "Bangladesh",
     role: "student",
   },
+  {
+    name: "Demo Student",
+    email: "demo.student@noor-academy.test",
+    password: "NoorDemo@2026!",
+    country: "Bangladesh",
+    role: "student",
+  },
 ];
 
 async function seed() {

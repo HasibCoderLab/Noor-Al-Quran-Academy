@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     country: { type: String, trim: true },
     whatsapp: { type: String, trim: true },
+    avatar: { type: String, trim: true },
     role: {
       type: String,
       enum: ["student", "teacher", "admin"],

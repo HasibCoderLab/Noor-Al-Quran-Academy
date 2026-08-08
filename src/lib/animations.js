@@ -252,3 +252,20 @@ export const chipIn = {
     },
   },
 };
+
+// Password requirement marker: subtle pop when a rule becomes satisfied.
+export const requirementPop = {
+  initial: {
+    scale: 0.5,
+    opacity: 0,
+  },
+  animate: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 500,
+      damping: 22,
+    },
+  },
+};

@@ -30,6 +30,13 @@ export const auth = {
     return request("/api/auth/logout", { method: "POST" });
   },
 
+  updateProfile(payload) {
+    return request("/api/auth/profile", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+
   async getSession() {
     const result = await request("/api/auth/me");
     return result.ok && result.user ? result.user : null;

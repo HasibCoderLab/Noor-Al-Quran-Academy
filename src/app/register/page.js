@@ -10,7 +10,9 @@ import { SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
 import SocialLogin from "../../components/auth/SocialLogin";
-import PasswordField from "../../components/ui/PasswordField";
+import PasswordInput from "../../components/auth/PasswordInput";
+import { PasswordStrength } from "../../components/auth/PasswordStrength";
+import { useAuth } from "../../context/AuthContext";
 
 const handleOAuth = (provider) => {
   console.log(`${provider} OAuth`);
@@ -26,6 +28,7 @@ const initialForm = {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { register } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,8 +42,8 @@ export default function RegisterPage() {
       toast.error("Please enter your name and email.");
       return;
     }
-    if (form.password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+    if (form.password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
       return;
     }
     if (form.password !== form.confirm) {
@@ -50,24 +53,19 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          country: form.country,
-        }),
+      const response = await register({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        country: form.country,
       });
-      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        toast.error(data.error || "Registration failed. Please try again.");
+        toast.error(response.error || "Registration failed. Please try again.");
         return;
       }
 
-      toast.success(`Account created. Welcome, ${data.user.name.split(" ")[0]}!`);
+      toast.success(`Account created. Welcome, ${response.user.name.split(" ")[0]}!`);
       router.push("/dashboard");
     } catch {
       toast.error("Network error. Please try again.");
@@ -105,10 +103,12 @@ export default function RegisterPage() {
                 </label>
                 <input
                   id="name"
+                  name="name"
                   type="text"
                   value={form.name}
                   onChange={set("name")}
                   placeholder="e.g. Ahmed Rahman"
+                  autoComplete="name"
                   className={styles.input}
                 />
               </div>
@@ -119,10 +119,12 @@ export default function RegisterPage() {
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={form.email}
                   onChange={set("email")}
                   placeholder="you@example.com"
+                  autoComplete="email"
                   className={styles.input}
                 />
               </div>
@@ -133,6 +135,7 @@ export default function RegisterPage() {
                 </label>
                 <select
                   id="country"
+                  name="country"
                   value={form.country}
                   onChange={set("country")}
                   className={`${styles.input} appearance-none`}
@@ -147,24 +150,36 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <PasswordField
+                <PasswordInput
                   id="password"
                   label="Password"
                   value={form.password}
                   onChange={set("password")}
-                  placeholder="At least 6 characters"
-                  showStrength
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
                 />
+                <PasswordStrength password={form.password} />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <PasswordField
+                <PasswordInput
                   id="confirm"
                   label="Confirm password"
                   value={form.confirm}
                   onChange={set("confirm")}
                   placeholder="Repeat your password"
+                  autoComplete="new-password"
                 />
+                {form.confirm &&
+                  (form.password === form.confirm ? (
+                    <p className="text-xs font-semibold text-emerald-600">
+                      ✓ Passwords match
+                    </p>
+                  ) : (
+                    <p className="text-xs font-semibold text-red-500">
+                      Passwords do not match
+                    </p>
+                  ))}
               </div>
 
               <button

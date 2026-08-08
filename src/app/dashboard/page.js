@@ -4,12 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import toast from "react-hot-toast";
 
 import { SITE, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { staggerContainer, staggerItem } from "../../lib/animations";
-import { auth } from "../../lib/auth";
+import { useAuth } from "../../context/AuthContext";
 
 const courseName = (id) =>
   COURSES.find((course) => course.id === id)?.name || id;
@@ -28,20 +27,18 @@ const formatDate = (iso) => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
+  const { user, isLoading } = useAuth();
   const [myBookings, setMyBookings] = useState([]);
 
   useEffect(() => {
+    if (isLoading) return;
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+
     let active = true;
     const load = async () => {
-      const session = await auth.getSession();
-      if (!active) return;
-      if (!session) {
-        router.replace("/login");
-        return;
-      }
-      setUser(session);
-
       try {
         const response = await fetch("/api/bookings");
         const data = await response.json().catch(() => ({}));
@@ -59,15 +56,9 @@ export default function DashboardPage() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, [isLoading, user, router]);
 
-  const handleLogout = async () => {
-    await auth.logout();
-    toast.success("Logged out.");
-    router.push("/");
-  };
-
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <section className="flex min-h-screen items-center justify-center bg-secondary pt-16">
         <p className="text-sm text-primary/60">Loading…</p>
@@ -113,9 +104,6 @@ export default function DashboardPage() {
             <Link href="/free-trial" className={styles.btnAccent}>
               Book Free Trial
             </Link>
-            <button onClick={handleLogout} className={styles.btnGhost}>
-              Logout
-            </button>
           </div>
         </div>
 

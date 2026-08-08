@@ -2,13 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { LogOut } from "lucide-react";
 
 import { useScrollDirection } from "../../hooks/useScrollDirection";
 import i18n from "../../lib/i18n";
 import { NAV_LINKS, SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
+import { useAuth } from "../../context/AuthContext";
+import Avatar from "../ui/Avatar";
+import AccountMenu from "./AccountMenu";
 import {
   navbarVariants,
   mobileMenuVariants,
@@ -27,11 +31,15 @@ const LANGS = [
 export default function Navbar() {
   const { scrollDir, isAtTop } = useScrollDirection();
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [hash, setHash] = useState("");
   const [lang, setLang] = useState("en");
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef(null);
+
+  const isDashboard = pathname === "/dashboard";
 
   useEffect(() => {
     setHash(window.location.hash.replace("#", ""));
@@ -77,6 +85,16 @@ export default function Navbar() {
       return pathname === "/" && hash === href.split("#")[1];
     }
     return pathname === href;
+  };
+
+  const handleMobileLogout = async () => {
+    setIsOpen(false);
+    await logout();
+  };
+
+  const handleDashboardLogout = async () => {
+    await logout();
+    router.push("/login");
   };
 
   const barClasses =
@@ -189,16 +207,46 @@ export default function Navbar() {
 
         {/* Desktop CTA buttons */}
         <div className="hidden items-center gap-3 xl:flex">
-          <motion.span variants={hoverScale} className="inline-flex">
-            <Link href="/login" className={styles.btnGhost}>
-              Login
-            </Link>
-          </motion.span>
-          <motion.span variants={hoverScale} className="inline-flex">
-            <Link href="/free-trial" className={styles.btnAccent}>
-              Free Trial
-            </Link>
-          </motion.span>
+          {isLoading ? (
+            <span className="flex items-center gap-2">
+              <span className="h-9 w-9 animate-pulse rounded-full bg-primary/10" />
+              <span className="h-3 w-16 animate-pulse rounded-full bg-primary/10" />
+            </span>
+          ) : isAuthenticated && isDashboard ? (
+            <>
+              <AccountMenu />
+              <button
+                type="button"
+                onClick={handleDashboardLogout}
+                className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </>
+          ) : isAuthenticated ? (
+            <>
+              <AccountMenu />
+              <motion.span variants={hoverScale} className="inline-flex">
+                <Link href="/free-trial" className={styles.btnAccent}>
+                  Free Trial
+                </Link>
+              </motion.span>
+            </>
+          ) : (
+            <>
+              <motion.span variants={hoverScale} className="inline-flex">
+                <Link href="/login" className={styles.btnGhost}>
+                  Login
+                </Link>
+              </motion.span>
+              <motion.span variants={hoverScale} className="inline-flex">
+                <Link href="/free-trial" className={styles.btnAccent}>
+                  Free Trial
+                </Link>
+              </motion.span>
+            </>
+          )}
         </div>
 
         {/* Hamburger */}
@@ -294,27 +342,66 @@ export default function Navbar() {
                 </motion.li>
 
                 <motion.li variants={staggerItem} className="mt-3 flex flex-col gap-3">
-                  <Link
-                    href="/login"
-                    onClick={() => setIsOpen(false)}
-                    className={styles.btnGhost}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setIsOpen(false)}
-                    className={styles.btnOutline}
-                  >
-                    Register
-                  </Link>
-                  <Link
-                    href="/free-trial"
-                    onClick={() => setIsOpen(false)}
-                    className={styles.btnAccent}
-                  >
-                    Book Free Trial
-                  </Link>
+                  {isAuthenticated ? (
+                    <>
+                      <div className="flex items-center gap-3 rounded-xl bg-secondary px-4 py-3">
+                        <Avatar user={user} size="md" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-primary">
+                            {user.name}
+                          </p>
+                          <p className="truncate text-xs text-primary/60">
+                            {user.email}
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsOpen(false)}
+                        className={styles.btnOutline}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/free-trial"
+                        onClick={() => setIsOpen(false)}
+                        className={styles.btnAccent}
+                      >
+                        Book Free Trial
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleMobileLogout}
+                        className={styles.btnGhost}
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        onClick={() => setIsOpen(false)}
+                        className={styles.btnGhost}
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setIsOpen(false)}
+                        className={styles.btnOutline}
+                      >
+                        Register
+                      </Link>
+                      <Link
+                        href="/free-trial"
+                        onClick={() => setIsOpen(false)}
+                        className={styles.btnAccent}
+                      >
+                        Book Free Trial
+                      </Link>
+                    </>
+                  )}
                 </motion.li>
               </motion.ul>
             </motion.div>

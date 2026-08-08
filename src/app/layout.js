@@ -6,6 +6,7 @@ import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import AppToaster from "../components/ui/Toaster";
 import FloatingDock from "../components/floating/FloatingDock";
+import { AuthProvider } from "../context/AuthContext";
 import { SITE } from "../data/siteData";
 
 const inter = Inter({
@@ -53,11 +54,13 @@ export default function RootLayout({ children }) {
       className={`${inter.variable} ${hindSiliguri.variable} ${amiri.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <AppToaster />
-        <FloatingDock />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <AppToaster />
+          <FloatingDock />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -10,19 +10,33 @@ import { SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
 import SocialLogin from "../../components/auth/SocialLogin";
-import PasswordField from "../../components/ui/PasswordField";
+import PasswordInput from "../../components/auth/PasswordInput";
+import { useAuth } from "../../context/AuthContext";
 
 const handleOAuth = (provider) => {
   console.log(`${provider} OAuth`);
 };
 
+const DEMO_ACCOUNT = {
+  email: "demo.student@noor-academy.test",
+  password: "NoorDemo@2026!",
+};
+
+const isDemoMode = process.env.NODE_ENV !== "production";
+
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
 
   const set = (field) => (event) =>
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
+
+  const fillDemoAccount = () => {
+    setForm({ email: DEMO_ACCOUNT.email, password: DEMO_ACCOUNT.password });
+    toast.success("Demo account filled. Press Login to continue.");
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -34,22 +48,17 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email.trim(),
-          password: form.password,
-        }),
+      const response = await login({
+        email: form.email.trim(),
+        password: form.password,
       });
-      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        toast.error(data.error || "Login failed. Please try again.");
+        toast.error(response.error || "Login failed. Please try again.");
         return;
       }
 
-      toast.success(`Welcome back, ${data.user.name.split(" ")[0]}!`);
+      toast.success(`Welcome back, ${response.user.name.split(" ")[0]}!`);
       router.push("/dashboard");
     } catch {
       toast.error("Network error. Please try again.");
@@ -87,21 +96,24 @@ export default function LoginPage() {
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={form.email}
                   onChange={set("email")}
                   placeholder="you@example.com"
+                  autoComplete="email"
                   className={styles.input}
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <PasswordField
+                <PasswordInput
                   id="password"
                   label="Password"
                   value={form.password}
                   onChange={set("password")}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                 />
               </div>
 
@@ -123,6 +135,27 @@ export default function LoginPage() {
                 {submitting ? "Logging in…" : "Login"}
               </button>
             </form>
+
+            {isDemoMode && (
+              <div className="mt-5 rounded-xl border border-dashed border-accent/50 bg-accent/5 p-4 text-center">
+                <p className="text-xs font-bold uppercase tracking-wider text-accent">
+                  Demo Account
+                </p>
+                <p className="mt-1 break-all text-xs text-primary/70">
+                  Email: {DEMO_ACCOUNT.email}
+                </p>
+                <p className="break-all text-xs text-primary/70">
+                  Password: {DEMO_ACCOUNT.password}
+                </p>
+                <button
+                  type="button"
+                  onClick={fillDemoAccount}
+                  className={`${styles.btnAccent} mt-3 w-full`}
+                >
+                  Use Demo Account
+                </button>
+              </div>
+            )}
 
             <div className="mt-7">
               <SocialLogin
