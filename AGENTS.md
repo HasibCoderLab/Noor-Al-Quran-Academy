@@ -25,3 +25,58 @@ Flags + labels:
 State: localStorage key 'lang', default 'en'
 AR selected → document.dir = 'rtl'
 Others → document.dir = 'ltr'
+
+## DATABASE MODELS (Mongoose — src/models/)
+
+### User.js
+- name: String, required, trim
+- email: String, required, unique, lowercase, trim
+- password: String, select:false, pre-save bcrypt 12 rounds, comparePassword() instance method
+- country: String
+- whatsapp: String
+- role: String, enum ['student', 'teacher', 'admin'], default 'student'
+- timestamps: true
+
+### Booking.js
+- user: ObjectId, ref 'User' (optional — guest booking allowed)
+- type: String, enum ['free-trial', 'class', 'subscription']
+- contact fields: name, email, phone (for guest/free-trial)
+- course: String, enum ['tajweed', 'hifz', 'nazra', 'dua']
+- day: String
+- time: String
+- duration: Number, enum [30, 45, 60]
+- message: String
+- status: String, enum ['pending', 'contacted', 'confirmed', 'completed', 'cancelled'], default 'pending'
+- Index: { email: 1 }, { user: 1 }
+- timestamps: true
+
+### Availability.js
+- day: String (e.g. "Saturday")
+- time: String (e.g. "09:00")
+- duration: Number, enum [30, 45, 60]
+- status: String, enum ['available', 'booked'], default 'available'
+- booking: ObjectId, ref 'Booking' (optional)
+- timestamps: true
+
+### Progress.js
+- user: ObjectId, ref 'User', required
+- course: String, enum ['tajweed', 'hifz', 'nazra', 'dua']
+- Unique index: { user: 1, course: 1 }
+- status: String, enum ['not-started', 'in-progress', 'completed'], default 'not-started'
+- lessonsCompleted: Number, default 0
+- totalLessons: Number, default 0
+- lastAssessment: Date
+- notes: String
+- timestamps: true
+
+### Review.js
+- user: ObjectId, ref 'User' (optional)
+- name: String, required
+- country: String
+- text: String, required, minLength 10, maxLength 500
+- rating: Number, required, min 1, max 5
+- status: String, enum ['pending', 'approved', 'rejected'], default 'pending'
+- timestamps: true
+
+### Pattern (all models use):
+mongoose.models.ModelName || mongoose.model('ModelName', schema)

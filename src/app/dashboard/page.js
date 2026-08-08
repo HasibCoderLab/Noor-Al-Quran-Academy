@@ -10,7 +10,6 @@ import { SITE, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { staggerContainer, staggerItem } from "../../lib/animations";
 import { auth } from "../../lib/auth";
-import { bookings } from "../../lib/bookings";
 
 const courseName = (id) =>
   COURSES.find((course) => course.id === id)?.name || id;
@@ -33,17 +32,37 @@ export default function DashboardPage() {
   const [myBookings, setMyBookings] = useState([]);
 
   useEffect(() => {
-    const session = auth.getSession();
-    if (!session) {
-      router.replace("/login");
-      return;
-    }
-    setUser(session);
-    setMyBookings(bookings.getAll());
+    let active = true;
+    const load = async () => {
+      const session = await auth.getSession();
+      if (!active) return;
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      setUser(session);
+
+      try {
+        const response = await fetch("/api/bookings");
+        const data = await response.json().catch(() => ({}));
+        if (!active) return;
+        if (response.status === 401) {
+          router.replace("/login");
+          return;
+        }
+        setMyBookings(Array.isArray(data.bookings) ? data.bookings : []);
+      } catch {
+        if (active) setMyBookings([]);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, [router]);
 
-  const handleLogout = () => {
-    auth.logout();
+  const handleLogout = async () => {
+    await auth.logout();
     toast.success("Logged out.");
     router.push("/");
   };

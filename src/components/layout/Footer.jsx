@@ -114,6 +114,29 @@ export default function Footer() {
           <p>
             © {new Date().getFullYear()} {SITE.name}. All rights reserved.
           </p>
+          <nav
+            aria-label="Legal"
+            className="flex items-center gap-4 text-white/60"
+          >
+            <Link
+              href="/privacy-policy"
+              className="transition hover:text-accent"
+            >
+              Privacy Policy
+            </Link>
+            <span aria-hidden="true" className="text-white/30">
+              ·
+            </span>
+            <Link href="/terms" className="transition hover:text-accent">
+              Terms of Service
+            </Link>
+            <span aria-hidden="true" className="text-white/30">
+              ·
+            </span>
+            <Link href="/refund-policy" className="transition hover:text-accent">
+              Refund Policy
+            </Link>
+          </nav>
           <p dir="rtl" className="font-amiri text-sm text-accent/90">
             إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ
           </p>

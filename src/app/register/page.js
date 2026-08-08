@@ -9,8 +9,8 @@ import toast from "react-hot-toast";
 import { SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
-import { auth } from "../../lib/auth";
 import SocialLogin from "../../components/auth/SocialLogin";
+import PasswordField from "../../components/ui/PasswordField";
 
 const handleOAuth = (provider) => {
   console.log(`${provider} OAuth`);
@@ -32,7 +32,7 @@ export default function RegisterPage() {
   const set = (field) => (event) =>
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim()) {
@@ -49,23 +49,31 @@ export default function RegisterPage() {
     }
 
     setSubmitting(true);
-    setTimeout(() => {
-      const result = auth.register({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        country: form.country,
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          country: form.country,
+        }),
       });
-      setSubmitting(false);
+      const data = await response.json().catch(() => ({}));
 
-      if (result.error) {
-        toast.error(result.error);
+      if (!response.ok) {
+        toast.error(data.error || "Registration failed. Please try again.");
         return;
       }
 
-      toast.success(`Account created. Welcome, ${result.user.name.split(" ")[0]}!`);
+      toast.success(`Account created. Welcome, ${data.user.name.split(" ")[0]}!`);
       router.push("/dashboard");
-    }, 400);
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -139,30 +147,23 @@ export default function RegisterPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="password" className="text-sm font-semibold text-primary">
-                  Password
-                </label>
-                <input
+                <PasswordField
                   id="password"
-                  type="password"
+                  label="Password"
                   value={form.password}
                   onChange={set("password")}
                   placeholder="At least 6 characters"
-                  className={styles.input}
+                  showStrength
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="confirm" className="text-sm font-semibold text-primary">
-                  Confirm password
-                </label>
-                <input
+                <PasswordField
                   id="confirm"
-                  type="password"
+                  label="Confirm password"
                   value={form.confirm}
                   onChange={set("confirm")}
                   placeholder="Repeat your password"
-                  className={styles.input}
                 />
               </div>
 

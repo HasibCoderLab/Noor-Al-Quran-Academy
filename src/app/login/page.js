@@ -9,8 +9,8 @@ import toast from "react-hot-toast";
 import { SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
-import { auth } from "../../lib/auth";
 import SocialLogin from "../../components/auth/SocialLogin";
+import PasswordField from "../../components/ui/PasswordField";
 
 const handleOAuth = (provider) => {
   console.log(`${provider} OAuth`);
@@ -24,7 +24,7 @@ export default function LoginPage() {
   const set = (field) => (event) =>
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!form.email.trim() || !form.password) {
@@ -33,18 +33,29 @@ export default function LoginPage() {
     }
 
     setSubmitting(true);
-    setTimeout(() => {
-      const result = auth.login(form);
-      setSubmitting(false);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email.trim(),
+          password: form.password,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
 
-      if (result.error) {
-        toast.error(result.error);
+      if (!response.ok) {
+        toast.error(data.error || "Login failed. Please try again.");
         return;
       }
 
-      toast.success(`Welcome back, ${result.user.name.split(" ")[0]}!`);
+      toast.success(`Welcome back, ${data.user.name.split(" ")[0]}!`);
       router.push("/dashboard");
-    }, 400);
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -85,16 +96,12 @@ export default function LoginPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="password" className="text-sm font-semibold text-primary">
-                  Password
-                </label>
-                <input
+                <PasswordField
                   id="password"
-                  type="password"
+                  label="Password"
                   value={form.password}
                   onChange={set("password")}
                   placeholder="••••••••"
-                  className={styles.input}
                 />
               </div>
 
