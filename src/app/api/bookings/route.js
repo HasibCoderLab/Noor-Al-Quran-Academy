@@ -22,6 +22,7 @@ const toPublicBooking = (booking) => ({
 
 const COURSES = ["tajweed", "hifz", "nazra", "dua"];
 const DURATIONS = [30, 45, 60];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request) {
   try {
@@ -46,13 +47,15 @@ export async function POST(request) {
       body.type === "class" || body.type === "subscription"
         ? body.type
         : "free-trial";
-    const duration = DURATIONS.includes(Number(body.duration))
-      ? Number(body.duration)
-      : 30;
-
     if (!name || !email || !whatsapp) {
       return NextResponse.json(
         { error: "Please provide your name, email and WhatsApp number." },
+        { status: 400 }
+      );
+    }
+    if (!EMAIL_REGEX.test(email)) {
+      return NextResponse.json(
+        { error: "Please provide a valid email address." },
         { status: 400 }
       );
     }
@@ -68,6 +71,13 @@ export async function POST(request) {
         { status: 400 }
       );
     }
+    if (!DURATIONS.includes(Number(body.duration))) {
+      return NextResponse.json(
+        { error: "Please choose a valid lesson length." },
+        { status: 400 }
+      );
+    }
+    const duration = Number(body.duration);
 
     await connectDB();
 

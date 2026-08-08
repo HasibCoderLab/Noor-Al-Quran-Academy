@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, LayoutDashboard, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import toast from "react-hot-toast";
 
 import Avatar from "../ui/Avatar";
@@ -120,6 +120,18 @@ export default function AccountMenu() {
               <LayoutDashboard className="h-4 w-4 text-primary/50" />
               Dashboard
             </Link>
+
+            {user.role === "admin" && (
+              <Link
+                href="/admin"
+                onClick={() => setOpen(false)}
+                role="menuitem"
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary/80 transition hover:bg-secondary hover:text-primary"
+              >
+                <ShieldCheck className="h-4 w-4 text-primary/50" />
+                Admin
+              </Link>
+            )}
 
             <button
               type="button"

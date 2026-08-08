@@ -362,6 +362,15 @@ export default function Navbar() {
                       >
                         Dashboard
                       </Link>
+                      {user.role === "admin" && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsOpen(false)}
+                          className={styles.btnOutline}
+                        >
+                          Admin
+                        </Link>
+                      )}
                       <Link
                         href="/free-trial"
                         onClick={() => setIsOpen(false)}

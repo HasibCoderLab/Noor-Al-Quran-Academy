@@ -59,7 +59,7 @@ export default function LoginPage() {
       }
 
       toast.success(`Welcome back, ${response.user.name.split(" ")[0]}!`);
-      router.push("/dashboard");
+      router.push(response.user.role === "admin" ? "/admin" : "/dashboard");
     } catch {
       toast.error("Network error. Please try again.");
     } finally {
