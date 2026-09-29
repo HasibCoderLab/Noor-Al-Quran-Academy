@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { envReport, allRequiredPresent } from "../src/lib/config.js";
+import { envReport, allRequiredPresent, effectiveContact } from "../src/lib/config.js";
 
 const TOUCHED = [
   "MONGODB_URI",
@@ -104,5 +104,38 @@ describe("envReport", () => {
   it("warns when Stripe is not configured", () => {
     const { warnings } = envReport();
     expect(warnings.some((w) => w.includes("Stripe"))).toBe(true);
+  });
+});
+
+describe("effectiveContact", () => {
+  it("prefers env values over site defaults", () => {
+    process.env.NEXT_PUBLIC_WHATSAPP = "https://wa.me/8801999999999";
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL = "real@nooralquran.com";
+
+    const contact = effectiveContact();
+    expect(contact.whatsapp).toMatchObject({
+      value: "https://wa.me/8801999999999",
+      fromEnv: true,
+      ok: true,
+    });
+    expect(contact.email).toMatchObject({
+      value: "real@nooralquran.com",
+      fromEnv: true,
+      ok: true,
+    });
+  });
+
+  it("falls back to the site defaults when env is unset", () => {
+    const contact = effectiveContact();
+    expect(contact.whatsapp.fromEnv).toBe(false);
+    expect(contact.whatsapp.ok).toBe(true);
+    expect(contact.whatsapp.value).toContain("wa.me/");
+    expect(contact.email.fromEnv).toBe(false);
+    expect(contact.email.value).toContain("@");
+  });
+
+  it("flags placeholder env values as not ok", () => {
+    process.env.NEXT_PUBLIC_WHATSAPP = "https://wa.me/8801XXXXXXXXX";
+    expect(effectiveContact().whatsapp.ok).toBe(false);
   });
 });

@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "doctor": "node --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/doctor.js",
+    "doctor": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/doctor.js",
     "db:seed": "node --env-file=.env.local scripts/seed.js"
   },
   "dependencies": {
