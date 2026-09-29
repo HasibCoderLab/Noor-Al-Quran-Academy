@@ -25,6 +25,11 @@ import { COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { scaleFade } from "../../lib/animations";
 import { useAuth } from "../../context/AuthContext";
+import { errorMessage } from "../../lib/apiError";
+import AvailabilityManager from "../../components/admin/AvailabilityManager";
+import OrdersManager from "../../components/admin/OrdersManager";
+import ProgressManager from "../../components/admin/ProgressManager";
+import ReviewsManager from "../../components/admin/ReviewsManager";
 import { useTranslation } from "react-i18next";
 
 const STATUSES = ["pending", "confirmed", "completed", "cancelled"];
@@ -416,6 +421,7 @@ export default function AdminPage() {
   const [pendingAction, setPendingAction] = useState(null);
   const [acting, setActing] = useState(false);
   const [searchInput, setSearchInput] = useState("");
+  const [view, setView] = useState("bookings");
 
   const isAdmin = user?.role === "admin";
 
@@ -602,6 +608,40 @@ export default function AdminPage() {
           </Link>
         </div>
 
+        {/* View tabs */}
+        <div className="mt-6 flex flex-wrap gap-2">
+          {[
+            { value: "bookings", label: t("admin.tab.bookings") },
+            { value: "availability", label: t("admin.tab.availability") },
+            { value: "orders", label: t("admin.tab.orders") },
+            { value: "progress", label: t("admin.tab.progress") },
+            { value: "reviews", label: t("admin.tab.reviews") },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              type="button"
+              onClick={() => setView(tab.value)}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                view === tab.value
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-white text-primary/70 ring-1 ring-primary/10 hover:text-primary"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {view === "availability" ? (
+          <AvailabilityManager />
+        ) : view === "orders" ? (
+          <OrdersManager />
+        ) : view === "progress" ? (
+          <ProgressManager />
+        ) : view === "reviews" ? (
+          <ReviewsManager />
+        ) : (
+          <>
         {/* Overview cards */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat) => (
@@ -784,6 +824,8 @@ export default function AdminPage() {
             </>
           ) : null}
         </div>
+          </>
+        )}
       </div>
 
       {/* Detail modal */}

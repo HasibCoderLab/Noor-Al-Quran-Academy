@@ -5,6 +5,9 @@ import { styles } from "../../styles/commonStyles";
 
 export const metadata = {
   title: "Refund Policy",
+  description:
+    "Refund policy for class packages and subscriptions at Noor Al-Quran Academy.",
+  alternates: { canonical: "/refund-policy" },
 };
 
 const h2 = "font-hind-siliguri text-xl font-bold text-primary";

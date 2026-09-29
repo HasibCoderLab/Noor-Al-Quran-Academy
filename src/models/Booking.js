@@ -17,6 +17,10 @@ const bookingSchema = new mongoose.Schema(
       enum: ["tajweed", "hifz", "nazra", "dua"],
       required: true,
     },
+    date: {
+      type: String,
+      match: [/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"],
+    },
     day: {
       type: String,
       enum: ["sat", "sun", "mon", "tue", "wed", "thu", "fri"],
@@ -40,5 +44,6 @@ const bookingSchema = new mongoose.Schema(
 
 bookingSchema.index({ email: 1, createdAt: -1 });
 bookingSchema.index({ user: 1, createdAt: -1 });
+bookingSchema.index({ date: 1, time: 1 });
 
 export default mongoose.models.Booking || mongoose.model("Booking", bookingSchema);

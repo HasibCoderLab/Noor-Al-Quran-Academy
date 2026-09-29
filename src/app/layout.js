@@ -35,6 +35,9 @@ export const viewport = {
 };
 
 export const metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  ),
   title: {
     default: `${SITE.name} — Online Quran Classes`,
     template: `%s | ${SITE.name}`,
@@ -50,6 +53,23 @@ export const metadata = {
     "Hafiz ul Quran",
     SITE.name,
   ],
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    title: `${SITE.name} — Online Quran Classes`,
+    description: SITE.description,
+    locale: "en_US",
+    alternateLocale: ["bn_BD", "ar"],
+  },
+  twitter: {
+    card: "summary",
+    title: `${SITE.name} — Online Quran Classes`,
+    description: SITE.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -5,6 +5,9 @@ import { styles } from "../../styles/commonStyles";
 
 export const metadata = {
   title: "Privacy Policy",
+  description:
+    "How Noor Al-Quran Academy collects, uses and protects your personal information.",
+  alternates: { canonical: "/privacy-policy" },
 };
 
 const h2 = "font-hind-siliguri text-xl font-bold text-primary";

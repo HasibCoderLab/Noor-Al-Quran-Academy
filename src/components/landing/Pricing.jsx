@@ -2,17 +2,24 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
 import SectionWrapper from "../ui/SectionWrapper";
 import { PRICING } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { fadeIn } from "../../lib/animations";
+import { useAuth } from "../../context/AuthContext";
+import { errorMessage } from "../../lib/apiError";
 
 export default function Pricing() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { user } = useAuth();
   const [region, setRegion] = useState("intl");
+  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -21,6 +28,34 @@ export default function Pricing() {
 
   const data = PRICING[region];
   const isBD = region === "bd";
+
+  const startCheckout = async (planIndex) => {
+    if (paying) return;
+    if (!user) {
+      router.push(`/login?from=${encodeURIComponent("/#pricing")}`);
+      return;
+    }
+
+    setPaying(true);
+    try {
+      const response = await fetch("/api/payments/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ region, planIndex }),
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || !result.url) {
+        toast.error(errorMessage(t, result, "errors.generic"));
+        return;
+      }
+
+      window.location.href = result.url;
+    } catch {
+      toast.error(t("errors.network"));
+      setPaying(false);
+    }
+  };
 
   return (
     <SectionWrapper id="pricing" direction="bottom">
@@ -72,7 +107,7 @@ export default function Pricing() {
             exit="hidden"
             className="grid gap-6 md:grid-cols-3"
           >
-            {data.plans.map((plan) => {
+            {data.plans.map((plan, planIndex) => {
               const isPopular = plan.popular;
               return (
                 <div
@@ -140,11 +175,21 @@ export default function Pricing() {
                     ))}
                   </ul>
 
-                  <div className="mt-8 flex flex-1 items-end">
+                  <div className="mt-8 flex flex-1 flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startCheckout(planIndex)}
+                      disabled={paying}
+                      className={`w-full disabled:cursor-not-allowed disabled:opacity-70 ${
+                        isPopular ? styles.btnAccent : styles.btnPrimary
+                      }`}
+                    >
+                      {paying ? t("common.redirecting") : t("landing.pricing.choose")}
+                    </button>
                     <Link
                       href="/free-trial"
-                      className={`w-full ${
-                        isPopular ? styles.btnAccent : styles.btnPrimary
+                      className={`text-center text-xs font-semibold hover:underline ${
+                        isPopular ? "text-white/75" : "text-primary/60"
                       }`}
                     >
                       {t("landing.pricing.startFreeTrial")}

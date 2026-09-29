@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import { SITE, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
 import { useAuth } from "../../context/AuthContext";
+import { errorMessage } from "../../lib/apiError";
 
 const initialForm = {
   name: "",
@@ -16,15 +18,50 @@ const initialForm = {
   whatsapp: "",
   country: "",
   course: "",
+  date: "",
   time: "",
   duration: "30",
   message: "",
 };
 
+const toLocalDateValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const DAY_COUNT = 14;
+
 export default function FreeTrialPage() {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
+  const [slots, setSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [selectedSlotId, setSelectedSlotId] = useState("");
+
+  const days = useMemo(() => {
+    const today = new Date();
+    return Array.from({ length: DAY_COUNT }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() + index);
+      return { value: toLocalDateValue(date), date };
+    });
+  }, []);
+
+  const dayLabel = (date) => {
+    try {
+      return new Intl.DateTimeFormat(i18n.language, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }).format(date);
+    } catch {
+      return toLocalDateValue(date);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -37,22 +74,81 @@ export default function FreeTrialPage() {
     }));
   }, [user]);
 
+  useEffect(() => {
+    setSelectedSlotId("");
+    setForm((prev) => ({ ...prev, time: "", duration: "30" }));
+    setSlots([]);
+
+    if (!form.date) return;
+    let active = true;
+    setLoadingSlots(true);
+
+    fetch(`/api/availability?date=${encodeURIComponent(form.date)}`)
+      .then((res) => res.json().catch(() => ({})))
+      .then((data) => {
+        if (!active) return;
+        setSlots(Array.isArray(data.slots) ? data.slots : []);
+      })
+      .catch(() => {
+        if (active) setSlots([]);
+      })
+      .finally(() => {
+        if (active) setLoadingSlots(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [form.date]);
+
   const set = (field) => (event) =>
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
+
+  const selectDay = (value) => {
+    setForm((prev) => ({ ...prev, date: value }));
+  };
+
+  const selectSlot = (slot) => {
+    setSelectedSlotId(slot.id);
+    setForm((prev) => ({
+      ...prev,
+      time: slot.time,
+      duration: String(slot.duration),
+    }));
+  };
+
+  const refreshSlots = async () => {
+    if (!form.date) return;
+    try {
+      const res = await fetch(
+        `/api/availability?date=${encodeURIComponent(form.date)}`
+      );
+      const data = await res.json().catch(() => ({}));
+      setSlots(Array.isArray(data.slots) ? data.slots : []);
+    } catch {
+      setSlots([]);
+    }
+    setSelectedSlotId("");
+    setForm((prev) => ({ ...prev, time: "" }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim() || !form.whatsapp.trim()) {
-      toast.error("Please fill in your name, email and WhatsApp number.");
+      toast.error(t("validation.contactRequired"));
       return;
     }
     if (!form.course) {
-      toast.error("Please choose a course.");
+      toast.error(t("validation.chooseCourse"));
+      return;
+    }
+    if (!form.date) {
+      toast.error(t("booking.pickDate"));
       return;
     }
     if (!form.time) {
-      toast.error("Please choose a preferred class time.");
+      toast.error(t("validation.chooseSlot"));
       return;
     }
 
@@ -68,6 +164,7 @@ export default function FreeTrialPage() {
           whatsapp: form.whatsapp.trim(),
           country: form.country.trim(),
           course: form.course,
+          date: form.date,
           time: form.time,
           duration: Number(form.duration),
           message: form.message.trim(),
@@ -76,14 +173,25 @@ export default function FreeTrialPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        toast.error(data.error || "Could not submit your request. Please try again.");
+        toast.error(errorMessage(t, data, "errors.generic"));
+        if (data.code === "SLOT_TAKEN" || data.code === "DUPLICATE_BOOKING") {
+          refreshSlots();
+        }
         return;
       }
 
-      toast.success("Free trial requested! We will contact you on WhatsApp shortly.");
-      setForm(initialForm);
+      toast.success(t("booking.success"));
+      setForm((prev) => ({
+        ...initialForm,
+        name: prev.name,
+        email: prev.email,
+        whatsapp: prev.whatsapp,
+        country: prev.country,
+      }));
+      setSlots([]);
+      setSelectedSlotId("");
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error(t("errors.network"));
     } finally {
       setSubmitting(false);
     }
@@ -102,14 +210,14 @@ export default function FreeTrialPage() {
         className={`${styles.container} relative z-10`}
       >
         <div className={styles.sectionHeader}>
-          <span className={styles.badgeGold}>Free Trial</span>
-          <h1 className={`${styles.sectionTitle} mt-4`}>
-            Book Your Free Trial Class
-          </h1>
+          <span className={styles.badgeGold}>{t("booking.badge")}</span>
+          <h1 className={`${styles.sectionTitle} mt-4`}>{t("booking.title")}</h1>
           <div className={styles.goldDivider} />
           <p className={styles.sectionSub}>
-            Meet {SITE.teacher} ({SITE.teacherTitle}) in a free one-to-one trial
-            class and experience the lesson format before you commit.
+            {t("booking.subtitle", {
+              teacher: SITE.teacher,
+              title: SITE.teacherTitle,
+            })}
           </p>
         </div>
 
@@ -120,13 +228,13 @@ export default function FreeTrialPage() {
             className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-primary/10 lg:col-span-3"
           >
             <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-              Trial class details
+              {t("booking.detailsHeading")}
             </h2>
 
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <div className="flex min-w-0 flex-col gap-1.5">
                 <label htmlFor="name" className="text-sm font-semibold text-primary">
-                  Full name *
+                  {t("common.fullName")} *
                 </label>
                 <input
                   id="name"
@@ -140,7 +248,7 @@ export default function FreeTrialPage() {
 
               <div className="flex min-w-0 flex-col gap-1.5">
                 <label htmlFor="email" className="text-sm font-semibold text-primary">
-                  Email *
+                  {t("booking.emailLabel")}
                 </label>
                 <input
                   id="email"
@@ -154,7 +262,7 @@ export default function FreeTrialPage() {
 
               <div className="flex min-w-0 flex-col gap-1.5">
                 <label htmlFor="whatsapp" className="text-sm font-semibold text-primary">
-                  WhatsApp number *
+                  {t("booking.whatsappLabel")}
                 </label>
                 <input
                   id="whatsapp"
@@ -168,7 +276,7 @@ export default function FreeTrialPage() {
 
               <div className="flex min-w-0 flex-col gap-1.5">
                 <label htmlFor="country" className="text-sm font-semibold text-primary">
-                  Country
+                  {t("booking.countryLabel")}
                 </label>
                 <select
                   id="country"
@@ -176,7 +284,7 @@ export default function FreeTrialPage() {
                   onChange={set("country")}
                   className={selectField}
                 >
-                  <option value="">Select country</option>
+                  <option value="">{t("booking.selectCountry")}</option>
                   {SITE.targetCountries.map((country) => (
                     <option key={country} value={country}>
                       {country}
@@ -185,9 +293,9 @@ export default function FreeTrialPage() {
                 </select>
               </div>
 
-              <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2">
                 <label htmlFor="course" className="text-sm font-semibold text-primary">
-                  Course *
+                  {t("booking.courseLabel")}
                 </label>
                 <select
                   id="course"
@@ -195,7 +303,7 @@ export default function FreeTrialPage() {
                   onChange={set("course")}
                   className={selectField}
                 >
-                  <option value="">Select course</option>
+                  <option value="">{t("booking.selectCourse")}</option>
                   {COURSES.map((course) => (
                     <option key={course.id} value={course.id}>
                       {course.name}
@@ -204,62 +312,79 @@ export default function FreeTrialPage() {
                 </select>
               </div>
 
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <label htmlFor="time" className="text-sm font-semibold text-primary">
-                  Preferred time *
-                </label>
-                <select
-                  id="time"
-                  value={form.time}
-                  onChange={set("time")}
-                  className={selectField}
-                >
-                  <option value="">Select time (Dhaka)</option>
-                  {SITE.classTimes.satThu.map((time) => (
-                    <option key={time} value={time}>
-                      {time} — Sat to Thu
-                    </option>
-                  ))}
-                  {SITE.classTimes.friday.map((time) => (
-                    <option key={time} value={time}>
-                      {time} — Friday
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2">
-                <label htmlFor="duration" className="text-sm font-semibold text-primary">
-                  Trial lesson length
-                </label>
+              {/* Date + slot picker */}
+              <div className="flex flex-col gap-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-primary">
+                  {t("booking.dateLabel")}
+                </span>
                 <div className="flex flex-wrap gap-2">
-                  {SITE.classTimes.durations.map((duration) => (
+                  {days.map((day) => (
                     <button
-                      key={duration}
+                      key={day.value}
                       type="button"
-                      onClick={() => setForm((prev) => ({ ...prev, duration: String(duration) }))}
-                      className={`rounded-full px-4 py-2.5 text-sm font-semibold transition ${
-                        form.duration === String(duration)
+                      onClick={() => selectDay(day.value)}
+                      className={`rounded-full px-3.5 py-2 text-xs font-semibold transition ${
+                        form.date === day.value
                           ? "bg-primary text-white shadow-sm"
                           : "bg-secondary text-primary/70 hover:text-primary"
                       }`}
                     >
-                      {duration} min
+                      {dayLabel(day.date)}
                     </button>
                   ))}
                 </div>
               </div>
 
+              <div className="flex flex-col gap-2 sm:col-span-2">
+                <span className="text-sm font-semibold text-primary">
+                  {t("booking.times")}
+                </span>
+
+                {!form.date ? (
+                  <p className="rounded-xl bg-secondary p-4 text-sm text-primary/60">
+                    {t("booking.pickDate")}
+                  </p>
+                ) : loadingSlots ? (
+                  <p className="rounded-xl bg-secondary p-4 text-sm text-primary/60">
+                    {t("common.loading")}
+                  </p>
+                ) : slots.length === 0 ? (
+                  <p className="rounded-xl bg-secondary p-4 text-sm text-primary/60">
+                    {t("booking.noSlots")}
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {slots.map((slot) => (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => selectSlot(slot)}
+                        className={`rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                          selectedSlotId === slot.id
+                            ? "bg-accent text-primary shadow-sm"
+                            : "bg-secondary text-primary/75 hover:text-primary"
+                        }`}
+                      >
+                        {slot.time}
+                        <span className="ms-1.5 text-xs opacity-70">
+                          {slot.duration} min
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex min-w-0 flex-col gap-1.5 sm:col-span-2">
                 <label htmlFor="message" className="text-sm font-semibold text-primary">
-                  Message (optional)
+                  {t("booking.messageLabel")}
                 </label>
                 <textarea
                   id="message"
                   rows={3}
                   value={form.message}
                   onChange={set("message")}
-                  placeholder="Tell us about the student, age, and current level…"
+                  placeholder={t("booking.messagePlaceholder")}
                   className={styles.input}
                 />
               </div>
@@ -270,17 +395,17 @@ export default function FreeTrialPage() {
               disabled={submitting}
               className={`${styles.btnAccent} mt-7 w-full disabled:cursor-not-allowed disabled:opacity-60`}
             >
-              {submitting ? "Booking…" : "Request Free Trial"}
+              {submitting ? t("booking.submitting") : t("booking.submit")}
             </button>
 
             <p className="mt-4 text-center text-xs text-primary/50">
-              Already have an account?{" "}
+              {t("booking.alreadyAccount")}{" "}
               <Link href="/login" className="font-semibold text-primary hover:text-accent">
-                Login
+                {t("booking.login")}
               </Link>{" "}
-              · or{" "}
+              {t("booking.or")}{" "}
               <Link href="/register" className="font-semibold text-primary hover:text-accent">
-                create an account
+                {t("booking.createAccount")}
               </Link>
             </p>
           </form>
@@ -289,34 +414,33 @@ export default function FreeTrialPage() {
           <div className="flex flex-col gap-4 lg:col-span-2">
             <div className="rounded-2xl bg-primary p-7 text-white shadow-xl">
               <h2 className="font-hind-siliguri text-lg font-bold">
-                What you get
+                {t("booking.whatYouGet")}
               </h2>
               <ul className="mt-4 flex flex-col gap-3 text-sm text-white/85">
                 <li className="flex items-start gap-2">
-                  <span className="mt-0.5 text-accent">✓</span> 1 free one-to-one
-                  trial lesson (30 minutes)
+                  <span className="mt-0.5 text-accent">✓</span>{" "}
+                  {t("booking.includes1", { duration: 30 })}
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-0.5 text-accent">✓</span> Tajweed, Hifz,
-                  Nazra or Masnoon Duas
+                  <span className="mt-0.5 text-accent">✓</span>{" "}
+                  {t("booking.includes2")}
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-0.5 text-accent">✓</span> Assessment of your
-                  current level
+                  <span className="mt-0.5 text-accent">✓</span>{" "}
+                  {t("booking.includes3")}
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-0.5 text-accent">✓</span> No payment required
+                  <span className="mt-0.5 text-accent">✓</span>{" "}
+                  {t("booking.includes4")}
                 </li>
               </ul>
             </div>
 
             <div className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-primary/10">
               <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-                Class times (Asia/Dhaka)
+                {t("booking.classTimes")}
               </h2>
-              <p className="mt-2 text-sm text-primary/70">
-                Saturday to Thursday:
-              </p>
+              <p className="mt-2 text-sm text-primary/70">{t("booking.satThu")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {SITE.classTimes.satThu.map((time) => (
                   <span
@@ -327,7 +451,7 @@ export default function FreeTrialPage() {
                   </span>
                 ))}
               </div>
-              <p className="mt-4 text-sm text-primary/70">Friday:</p>
+              <p className="mt-4 text-sm text-primary/70">{t("booking.friday")}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {SITE.classTimes.friday.map((time) => (
                   <span
@@ -344,7 +468,7 @@ export default function FreeTrialPage() {
                 rel="noopener noreferrer"
                 className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-primary px-6 py-3 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white"
               >
-                💬 Prefer WhatsApp? Chat now
+                {t("booking.preferWhatsApp")}
               </a>
             </div>
           </div>

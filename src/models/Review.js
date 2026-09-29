@@ -5,6 +5,11 @@ const reviewSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     name: { type: String, required: true, trim: true },
     country: { type: String, trim: true },
+    course: {
+      type: String,
+      enum: ["tajweed", "hifz", "nazra", "dua"],
+      required: true,
+    },
     text: { type: String, required: true, trim: true, maxlength: 2000 },
     rating: { type: Number, required: true, min: 1, max: 5 },
     status: {
@@ -17,5 +22,6 @@ const reviewSchema = new mongoose.Schema(
 );
 
 reviewSchema.index({ status: 1, createdAt: -1 });
+reviewSchema.index({ user: 1, course: 1 });
 
 export default mongoose.models.Review || mongoose.model("Review", reviewSchema);

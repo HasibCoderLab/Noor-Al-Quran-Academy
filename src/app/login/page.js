@@ -62,7 +62,14 @@ export default function LoginPage() {
 
       setVerifyHint("");
       toast.success(t("auth.welcomeName", { name: response.user.name.split(" ")[0] }));
-      router.push(response.user.role === "admin" ? "/admin" : "/dashboard");
+      const fromParam = new URLSearchParams(window.location.search).get("from");
+      const safeFrom =
+        fromParam && fromParam.startsWith("/") && !fromParam.startsWith("//")
+          ? fromParam
+          : null;
+      router.push(
+        safeFrom || (response.user.role === "admin" ? "/admin" : "/dashboard")
+      );
     } catch {
       toast.error(t("errors.network"));
     } finally {

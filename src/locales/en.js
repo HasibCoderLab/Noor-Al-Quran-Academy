@@ -15,6 +15,7 @@ const messages = {
   "common.view": "View",
   "common.edit": "Edit",
   "common.retry": "Try again",
+  "common.refresh": "Refresh",
   "common.comingSoon": "Coming soon",
   "common.notSet": "Not set",
   "common.dash": "—",
@@ -206,6 +207,30 @@ const messages = {
   "booking.orderSummary": "Order summary",
   "booking.bookedOn": "Booked on {{date}}",
 
+  // ── payments ────────────────────────────────────────────
+  "payment.success.title": "Payment successful!",
+  "payment.success.body":
+    "Jazak Allahu khayran. We received your payment — our team will contact you shortly to schedule your classes.",
+  "payment.success.pending": "Confirming your payment…",
+  "payment.success.checking":
+    "Waiting for the payment provider to confirm your payment. This usually takes a few seconds.",
+  "payment.success.failed":
+    "We could not confirm this payment. Please contact us if you were charged.",
+  "payment.success.timeout":
+    "This is taking longer than usual. Please check your dashboard later — it updates automatically once the payment is confirmed.",
+  "payment.success.dashboard": "Go to dashboard",
+  "payment.success.home": "Back to home",
+  "payment.failed.title": "Payment not confirmed",
+  "payment.cancelled.title": "Payment cancelled",
+  "payment.cancelled.body":
+    "No charge was made. You can come back and retry whenever you are ready.",
+  "payment.cancelled.retry": "Back to plans",
+  "payment.status.pending": "Pending",
+  "payment.status.paid": "Paid",
+  "payment.status.failed": "Failed",
+  "payment.status.refunded": "Refunded",
+  "payment.status.expired": "Expired",
+
   // ── dashboard ────────────────────────────────────────────
   "dashboard.greeting": "Assalamu'alaikum, {{name}}",
   "dashboard.bookFreeTrial": "Book Free Trial",
@@ -278,6 +303,22 @@ const messages = {
   "admin.goToDashboard": "Go to your dashboard",
   "admin.tab.bookings": "Bookings",
   "admin.tab.availability": "Availability",
+  "admin.tab.orders": "Payments",
+  "admin.orders.empty": "No payments yet.",
+  "admin.orders.customer": "Customer",
+  "admin.orders.plan": "Plan",
+  "admin.orders.amount": "Amount",
+  "admin.orders.status": "Status",
+  "admin.orders.date": "Date",
+  "admin.orders.count_one": "{{count}} payment",
+  "admin.orders.count_other": "{{count}} payments",
+  "admin.tab.progress": "Progress",
+  "admin.progress.title": "Student progress",
+  "admin.progress.selectStudent": "Select student",
+  "admin.progress.total": "Total lessons",
+  "admin.progress.notes": "Notes",
+  "admin.progress.empty": "No progress records for this student yet.",
+  "admin.progress.noStudents": "No students registered yet.",
   "admin.tab.reviews": "Reviews",
   "admin.availability.title": "Availability slots",
   "admin.availability.subtitle":
@@ -411,6 +452,7 @@ const messages = {
   "validation.nameEmpty": "Full name cannot be empty.",
   "validation.emailRequired": "Please enter your email.",
   "validation.reviewMin": "Please write at least 10 characters.",
+  "validation.reviewMax": "Review must be at most 500 characters.",
   "validation.ratingRequired": "Please choose a rating.",
   "validation.invalidStatus": "Invalid status value.",
   "validation.invalidBody": "Invalid request body.",
@@ -517,7 +559,7 @@ const messages = {
   "landing.pricing.classesPerMonth": "{{count}} classes per month",
   "landing.pricing.perMonth": "/ month",
   "landing.pricing.startFreeTrial": "Start Free Trial",
-  "landing.pricing.noteBD": "Payment via bKash (manual confirmation) · Free trial class included",
+  "landing.pricing.noteBD": "Secure payment via Stripe (Card) · Free trial class included",
   "landing.pricing.noteIntl": "Secure payment via Stripe (Card / Apple Pay / Google Pay) · Free trial class included",
   "landing.about.bio": "{{teacher}} is a {{title}} ({{year}}) from {{location}}. With years of experience teaching students across {{countries}}, he combines classical Tajweed mastery with a warm, patient teaching style that works for both children and adults.",
   "landing.about.highlights.0.title": "Hafiz ul Quran (2022)",

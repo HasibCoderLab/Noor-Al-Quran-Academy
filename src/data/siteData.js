@@ -9,12 +9,14 @@ export const SITE = {
   tagline: "Learn Quran with a Hafiz — online, one-to-one, from anywhere",
   description:
     "Personalized online Quran classes in Tajweed, Hifz, Nazra and Duas, taught by Hafiz ul Quran Ustadh Hasib Hasan from Chapai Nawabganj, Bangladesh.",
-  email: "contact@nooralquran.com",
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contact@nooralquran.com",
   phone: "+8801XXXXXXXXX",
   bKashNumber: "01XXXXXXXXX",
-  facebook: "https://facebook.com/nooralquranacademy",
-  messenger: "https://m.me/nooralquranacademy",
-  whatsapp: "https://wa.me/8801XXXXXXXXX",
+  facebook:
+    process.env.NEXT_PUBLIC_FACEBOOK_URL ||
+    "https://facebook.com/nooralquranacademy",
+  messenger: process.env.NEXT_PUBLIC_MESSENGER_URL || "https://m.me/nooralquranacademy",
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "https://wa.me/8801XXXXXXXXX",
   targetCountries: ["Italy", "USA", "UK", "Saudi Arabia", "Bangladesh"],
   subjects: ["tajweed", "hifz", "nazra", "dua"],
   classTimes: {

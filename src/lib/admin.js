@@ -13,7 +13,7 @@ export async function requireAdmin(request) {
   await connectDB();
 
   const user = await User.findById(payload.sub);
-  if (!user) {
+  if (!user || (payload.tokenVersion || 0) !== (user.tokenVersion || 0)) {
     return { user: null, error: "Not authenticated.", status: 401 };
   }
 

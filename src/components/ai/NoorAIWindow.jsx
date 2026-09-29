@@ -9,6 +9,7 @@ import QuickActions from "./QuickActions";
 import TypingIndicator from "./TypingIndicator";
 import { getAIResponse, WELCOME_MESSAGE } from "../../data/noorAI";
 import { aiWindowVariants } from "../../lib/animations";
+import { errorMessage } from "../../lib/apiError";
 import { useTranslation } from "react-i18next";
 
 const uid = () =>
@@ -69,7 +70,13 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
         body: JSON.stringify({ messages: history }),
       });
       const data = await response.json().catch(() => ({}));
-      if (response.ok && data?.text) aiText = data.text;
+      if (response.ok && data?.text) {
+        aiText = data.text;
+      } else if (response.status === 429) {
+        aiText = errorMessage(t, data, "errors.aiRateLimited");
+      } else if (response.status === 503) {
+        aiText = errorMessage(t, data, "errors.aiUnavailable");
+      }
     } catch {
       // Network error — fall back to the local demo assistant
     }

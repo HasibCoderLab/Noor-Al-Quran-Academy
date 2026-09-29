@@ -5,6 +5,9 @@ import { styles } from "../../styles/commonStyles";
 
 export const metadata = {
   title: "Terms of Service",
+  description:
+    "Terms of service for studying with Noor Al-Quran Academy — bookings, payments, schedules and conduct.",
+  alternates: { canonical: "/terms" },
 };
 
 const h2 = "font-hind-siliguri text-xl font-bold text-primary";
