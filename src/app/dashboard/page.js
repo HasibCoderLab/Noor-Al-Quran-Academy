@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import { SITE, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
@@ -26,6 +27,7 @@ const formatDate = (iso) => {
 };
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [myBookings, setMyBookings] = useState([]);
@@ -61,7 +63,7 @@ export default function DashboardPage() {
   if (isLoading || !user) {
     return (
       <section className="flex min-h-screen items-center justify-center bg-secondary pt-16">
-        <p className="text-sm text-primary/60">Loading…</p>
+        <p className="text-sm text-primary/60">{t("common.loading")}</p>
       </section>
     );
   }
@@ -92,7 +94,7 @@ export default function DashboardPage() {
             </span>
             <div>
               <h1 className="font-hind-siliguri text-2xl font-bold text-primary">
-                Assalamu&apos;alaikum, {user.name.split(" ")[0]}
+                {t("dashboard.greeting", { name: user.name.split(" ")[0] })}
               </h1>
               <p className="text-sm text-primary/60">
                 {user.email} {user.country ? `· ${user.country}` : ""}
@@ -102,7 +104,7 @@ export default function DashboardPage() {
 
           <div className="flex flex-wrap gap-3">
             <Link href="/free-trial" className={styles.btnAccent}>
-              Book Free Trial
+              {t("dashboard.bookFreeTrial")}
             </Link>
           </div>
         </div>
@@ -110,9 +112,9 @@ export default function DashboardPage() {
         {/* Stats */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {[
-            { label: "Classes taken", value: "0" },
-            { label: "Pending trials", value: String(pending.length) },
-            { label: "Course", value: "—" },
+            { label: t("dashboard.classesTaken"), value: "0" },
+            { label: t("dashboard.pendingTrials"), value: String(pending.length) },
+            { label: t("dashboard.courseStat"), value: "—" },
           ].map((stat) => (
             <motion.div
               key={stat.label}
@@ -131,17 +133,17 @@ export default function DashboardPage() {
           {/* Bookings */}
           <div className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-primary/10 lg:col-span-2">
             <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-              Your free trial requests
+              {t("dashboard.yourRequests")}
             </h2>
 
             {myBookings.length === 0 ? (
               <div className="mt-6 rounded-xl bg-secondary p-8 text-center">
                 <p className="text-3xl">🌙</p>
                 <p className="mt-3 text-sm text-primary/70">
-                  You have not booked a free trial yet.
+                  {t("dashboard.emptyTitle")}
                 </p>
                 <Link href="/free-trial" className={`${styles.btnPrimary} mt-5 inline-flex`}>
-                  Book your free trial
+                  {t("dashboard.emptyCta")}
                 </Link>
               </div>
             ) : (
@@ -157,7 +159,7 @@ export default function DashboardPage() {
                           {courseName(booking.course)}
                         </span>
                         <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-primary capitalize">
-                          {booking.status}
+                          {t("booking.status." + booking.status)}
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-primary/60">
@@ -165,7 +167,7 @@ export default function DashboardPage() {
                         {booking.time ? ` · ${booking.time} Dhaka` : ""}
                       </p>
                       <p className="mt-0.5 text-xs text-primary/40">
-                        Requested {formatDate(booking.createdAt)}
+                        {t("booking.requestedOn", { date: formatDate(booking.createdAt) })}
                       </p>
                     </div>
                   </li>
@@ -178,20 +180,20 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-6">
             <div className="rounded-2xl bg-primary p-7 text-white shadow-xl">
               <h2 className="font-hind-siliguri text-lg font-bold">
-                Next steps
+                {t("dashboard.nextSteps")}
               </h2>
               <ul className="mt-4 flex flex-col gap-3 text-sm text-white/85">
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 text-accent">1.</span>
-                  Book a free trial class
+                  {t("dashboard.step1")}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 text-accent">2.</span>
-                  We contact you on WhatsApp to confirm the time
+                  {t("dashboard.step2")}
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-0.5 text-accent">3.</span>
-                  Choose a paid plan and start your journey
+                  {t("dashboard.step3")}
                 </li>
               </ul>
               <a
@@ -206,15 +208,14 @@ export default function DashboardPage() {
 
             <div className="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-primary/10">
               <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-                Upcoming class
+                {t("dashboard.upcomingClass")}
               </h2>
               <p className="mt-3 text-sm text-primary/70">
-                You will see your confirmed class schedule here once your free
-                trial is approved.
+                {t("dashboard.upcomingHint")}
               </p>
               <div className="mt-4 flex items-center gap-3 rounded-xl bg-secondary p-4 text-sm text-primary/70">
                 <span className="text-lg">🗓️</span>
-                No classes scheduled yet
+                {t("dashboard.noClasses")}
               </div>
             </div>
           </div>

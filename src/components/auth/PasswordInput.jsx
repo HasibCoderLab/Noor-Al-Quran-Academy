@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 import { styles } from "../../styles/commonStyles";
 
 export default function PasswordInput({
@@ -13,6 +15,7 @@ export default function PasswordInput({
   placeholder,
   autoComplete,
 }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -35,7 +38,7 @@ export default function PasswordInput({
         <button
           type="button"
           onClick={() => setVisible((prev) => !prev)}
-          aria-label={visible ? "Hide password" : "Show password"}
+          aria-label={visible ? t("auth.hidePassword") : t("auth.showPassword")}
           aria-pressed={visible}
           className="absolute inset-y-0 end-2 flex w-11 items-center justify-center rounded-lg text-primary/50 transition hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import SectionWrapper from "../ui/SectionWrapper";
 import { PRICING } from "../../data/siteData";
@@ -10,6 +11,7 @@ import { styles } from "../../styles/commonStyles";
 import { fadeIn } from "../../lib/animations";
 
 export default function Pricing() {
+  const { t } = useTranslation();
   const [region, setRegion] = useState("intl");
 
   useEffect(() => {
@@ -23,13 +25,12 @@ export default function Pricing() {
   return (
     <SectionWrapper id="pricing" direction="bottom">
       <div className={styles.sectionHeader}>
-        <span className={styles.badgeGold}>Pricing</span>
-        <h2 className={`${styles.sectionTitle} mt-4`}>Simple, Honest Plans</h2>
+        <span className={styles.badgeGold}>{t("landing.pricing.badge")}</span>
+        <h2 className={`${styles.sectionTitle} mt-4`}>
+          {t("landing.pricing.title")}
+        </h2>
         <div className={styles.goldDivider} />
-        <p className={styles.sectionSub}>
-          Choose your region to see prices in your currency. Every plan includes
-          one-to-one online classes with your chosen subject.
-        </p>
+        <p className={styles.sectionSub}>{t("landing.pricing.sub")}</p>
       </div>
 
       {/* Region toggle */}
@@ -43,7 +44,7 @@ export default function Pricing() {
                 : "text-primary/70 hover:text-primary"
             }`}
           >
-            🇧🇩 Bangladesh
+            🇧🇩 {t("landing.pricing.bd")}
             <span className="hidden sm:inline"> (BDT)</span>
           </button>
           <button
@@ -54,7 +55,7 @@ export default function Pricing() {
                 : "text-primary/70 hover:text-primary"
             }`}
           >
-            🌍 International
+            🌍 {t("landing.pricing.intl")}
             <span className="hidden sm:inline"> (USD)</span>
           </button>
         </div>
@@ -84,7 +85,7 @@ export default function Pricing() {
                 >
                   {isPopular && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-4 py-1 text-xs font-bold text-primary shadow-sm">
-                      Most Popular
+                      {t("landing.pricing.popular")}
                     </span>
                   )}
 
@@ -100,7 +101,9 @@ export default function Pricing() {
                       isPopular ? "text-white/70" : "text-primary/60"
                     }`}
                   >
-                    {plan.classes} classes per month
+                    {t("landing.pricing.classesPerMonth", {
+                      count: plan.classes,
+                    })}
                   </p>
 
                   <p className="mt-6 flex items-baseline gap-1">
@@ -113,7 +116,7 @@ export default function Pricing() {
                         isPopular ? "text-white/70" : "text-primary/50"
                       }`}
                     >
-                      / month
+                      {t("landing.pricing.perMonth")}
                     </span>
                   </p>
 
@@ -144,7 +147,7 @@ export default function Pricing() {
                         isPopular ? styles.btnAccent : styles.btnPrimary
                       }`}
                     >
-                      Start Free Trial
+                      {t("landing.pricing.startFreeTrial")}
                     </Link>
                   </div>
                 </div>
@@ -155,9 +158,7 @@ export default function Pricing() {
       </div>
 
       <p className="mt-6 text-center text-sm text-primary/60">
-        {isBD
-          ? "Payment via bKash (manual confirmation) · Free trial class included"
-          : "Secure payment via Stripe (Card / Apple Pay / Google Pay) · Free trial class included"}
+        {t(isBD ? "landing.pricing.noteBD" : "landing.pricing.noteIntl")}
       </p>
     </SectionWrapper>
   );

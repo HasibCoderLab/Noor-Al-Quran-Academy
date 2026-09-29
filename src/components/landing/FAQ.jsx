@@ -2,23 +2,25 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import SectionWrapper from "../ui/SectionWrapper";
 import { FAQS } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 
 export default function FAQ() {
+  const { t } = useTranslation();
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
     <SectionWrapper id="faq" direction="bottom">
       <div className={styles.sectionHeader}>
-        <span className={styles.badgeGold}>FAQ</span>
-        <h2 className={`${styles.sectionTitle} mt-4`}>Frequently Asked Questions</h2>
+        <span className={styles.badgeGold}>{t("landing.faq.badge")}</span>
+        <h2 className={`${styles.sectionTitle} mt-4`}>
+          {t("landing.faq.title")}
+        </h2>
         <div className={styles.goldDivider} />
-        <p className={styles.sectionSub}>
-          Everything you need to know before your first class.
-        </p>
+        <p className={styles.sectionSub}>{t("landing.faq.sub")}</p>
       </div>
 
       <div className="mx-auto mt-10 max-w-3xl">

@@ -5,18 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import { SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { slideFromBottom } from "../../lib/animations";
-import SocialLogin from "../../components/auth/SocialLogin";
+import { errorMessage } from "../../lib/apiError";
 import PasswordInput from "../../components/auth/PasswordInput";
 import { PasswordStrength } from "../../components/auth/PasswordStrength";
 import { useAuth } from "../../context/AuthContext";
-
-const handleOAuth = (provider) => {
-  console.log(`${provider} OAuth`);
-};
 
 const initialForm = {
   name: "",
@@ -27,6 +24,7 @@ const initialForm = {
 };
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { register } = useAuth();
   const [form, setForm] = useState(initialForm);
@@ -39,15 +37,15 @@ export default function RegisterPage() {
     event.preventDefault();
 
     if (!form.name.trim() || !form.email.trim()) {
-      toast.error("Please enter your name and email.");
+      toast.error(t("validation.nameRequired"));
       return;
     }
     if (form.password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
+      toast.error(t("validation.passwordMin"));
       return;
     }
     if (form.password !== form.confirm) {
-      toast.error("Passwords do not match.");
+      toast.error(t("validation.passwordMismatch"));
       return;
     }
 
@@ -61,14 +59,20 @@ export default function RegisterPage() {
       });
 
       if (!response.ok) {
-        toast.error(response.error || "Registration failed. Please try again.");
+        toast.error(errorMessage(t, response, "auth.registerFailed"));
         return;
       }
 
-      toast.success(`Account created. Welcome, ${response.user.name.split(" ")[0]}!`);
-      router.push("/dashboard");
+      toast.success(
+        t("auth.accountCreated", { name: response.user.name.split(" ")[0] })
+      );
+      if (response.requiresVerification) {
+        router.push(`/verify-email?email=${encodeURIComponent(response.user.email)}`);
+      } else {
+        router.push("/dashboard");
+      }
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error(t("errors.network"));
     } finally {
       setSubmitting(false);
     }
@@ -89,17 +93,17 @@ export default function RegisterPage() {
             <div className="flex flex-col items-center text-center">
               <span className="text-3xl leading-none">🌙</span>
               <h1 className="font-hind-siliguri mt-4 text-2xl font-bold text-primary">
-                Create your account
+                {t("auth.createAccount")}
               </h1>
               <p className="mt-1 text-sm text-primary/60">
-                Join {SITE.name} and start learning the Quran
+                {t("auth.registerSubtitle", { app: SITE.name })}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="name" className="text-sm font-semibold text-primary">
-                  Full name
+                  {t("common.fullName")}
                 </label>
                 <input
                   id="name"
@@ -115,7 +119,7 @@ export default function RegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="email" className="text-sm font-semibold text-primary">
-                  Email
+                  {t("common.email")}
                 </label>
                 <input
                   id="email"
@@ -131,7 +135,7 @@ export default function RegisterPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="country" className="text-sm font-semibold text-primary">
-                  Country
+                  {t("common.country")}
                 </label>
                 <select
                   id="country"
@@ -140,7 +144,7 @@ export default function RegisterPage() {
                   onChange={set("country")}
                   className={`${styles.input} appearance-none`}
                 >
-                  <option value="">Select country</option>
+                  <option value="">{t("booking.selectCountry")}</option>
                   {SITE.targetCountries.map((country) => (
                     <option key={country} value={country}>
                       {country}
@@ -152,7 +156,7 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-1.5">
                 <PasswordInput
                   id="password"
-                  label="Password"
+                  label={t("auth.password")}
                   value={form.password}
                   onChange={set("password")}
                   placeholder="At least 8 characters"
@@ -164,7 +168,7 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-1.5">
                 <PasswordInput
                   id="confirm"
-                  label="Confirm password"
+                  label={t("auth.confirmPassword")}
                   value={form.confirm}
                   onChange={set("confirm")}
                   placeholder="Repeat your password"
@@ -173,11 +177,11 @@ export default function RegisterPage() {
                 {form.confirm &&
                   (form.password === form.confirm ? (
                     <p className="text-xs font-semibold text-emerald-600">
-                      ✓ Passwords match
+                      {t("auth.passwordsMatch")}
                     </p>
                   ) : (
                     <p className="text-xs font-semibold text-red-500">
-                      Passwords do not match
+                      {t("auth.passwordsNoMatch")}
                     </p>
                   ))}
               </div>
@@ -187,22 +191,14 @@ export default function RegisterPage() {
                 disabled={submitting}
                 className={`${styles.btnPrimary} mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60`}
               >
-                {submitting ? "Creating account…" : "Register"}
+                {submitting ? t("auth.creatingAccount") : t("auth.register")}
               </button>
             </form>
 
-            <div className="mt-7">
-              <SocialLogin
-                onGoogle={() => handleOAuth("Google")}
-                onFacebook={() => handleOAuth("Facebook")}
-                onApple={() => handleOAuth("Apple")}
-              />
-            </div>
-
             <div className="mt-6 border-t border-primary/10 pt-5 text-center text-sm text-primary/60">
-              Already have an account?{" "}
+              {t("auth.haveAccount")}{" "}
               <Link href="/login" className="font-semibold text-primary hover:text-accent">
-                Login
+                {t("nav.login")}
               </Link>
             </div>
           </div>

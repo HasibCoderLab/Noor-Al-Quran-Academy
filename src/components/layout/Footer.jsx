@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import { SITE, FOOTER_LINKS, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { staggerContainer, staggerItem } from "../../lib/animations";
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="relative overflow-hidden bg-primary text-white">
       <div className="pattern-overlay" aria-hidden="true" />
@@ -28,7 +31,7 @@ export default function Footer() {
                 {SITE.name}
               </span>
               <span className="text-xs font-medium uppercase tracking-wider text-white/60">
-                Online Academy
+                {t("common.onlineAcademy")}
               </span>
             </div>
           </div>
@@ -56,7 +59,7 @@ export default function Footer() {
               className="inline-flex w-fit items-center gap-2 text-white/80 transition hover:text-accent"
             >
               <span aria-hidden="true">💬</span>
-              WhatsApp
+              {t("common.whatsapp")}
             </a>
           </div>
         </motion.div>
@@ -64,7 +67,7 @@ export default function Footer() {
         {/* Courses */}
         <motion.div variants={staggerItem}>
           <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
-            Courses
+            {t("nav.courses")}
           </h3>
           <ul className="mt-4 flex flex-col gap-2.5 text-sm">
             {COURSES.map((course) => (
@@ -83,7 +86,7 @@ export default function Footer() {
         {/* Quick links */}
         <motion.div variants={staggerItem}>
           <h3 className="text-sm font-bold uppercase tracking-wider text-accent">
-            Quick Links
+            {t("footer.quickLinks")}
           </h3>
           <ul className="mt-4 flex flex-col gap-2.5 text-sm">
             {FOOTER_LINKS.quickLinks.map((link) => (
@@ -92,7 +95,7 @@ export default function Footer() {
                   href={link.href}
                   className="text-white/75 transition hover:text-accent"
                 >
-                  {link.label}
+                  {t(link.key)}
                 </Link>
               </li>
             ))}
@@ -101,7 +104,7 @@ export default function Footer() {
                 href="/free-trial"
                 className="text-white/75 transition hover:text-accent"
               >
-                Free Trial
+                {t("nav.freeTrial")}
               </Link>
             </li>
           </ul>
@@ -112,7 +115,7 @@ export default function Footer() {
       <div className="relative z-10 border-t border-white/10">
         <div className={`${styles.container} flex flex-col items-center gap-3 py-6 text-center text-xs text-white/60 sm:flex-row sm:justify-between sm:text-start`}>
           <p>
-            © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+            © {new Date().getFullYear()} {SITE.name}. {t("common.allRights")}
           </p>
           <nav
             aria-label="Legal"
@@ -122,25 +125,25 @@ export default function Footer() {
               href="/privacy-policy"
               className="transition hover:text-accent"
             >
-              Privacy Policy
+              {t("footer.privacy")}
             </Link>
             <span aria-hidden="true" className="text-white/30">
               ·
             </span>
             <Link href="/terms" className="transition hover:text-accent">
-              Terms of Service
+              {t("footer.terms")}
             </Link>
             <span aria-hidden="true" className="text-white/30">
               ·
             </span>
             <Link href="/refund-policy" className="transition hover:text-accent">
-              Refund Policy
+              {t("footer.refund")}
             </Link>
           </nav>
           <p dir="rtl" className="font-amiri text-sm text-accent/90">
             إِنَّا نَحْنُ نَزَّلْنَا الذِّكْرَ وَإِنَّا لَهُ لَحَافِظُونَ
           </p>
-          <p>Made with ♥ in Bangladesh</p>
+          <p>{t("common.madeWith")}</p>
         </div>
       </div>
     </footer>

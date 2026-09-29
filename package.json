@@ -32,7 +32,9 @@
     "@tailwindcss/vite": "^4.3.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.22",
-    "tailwindcss": "^4"
+    "mongodb-memory-server": "^11.3.0",
+    "tailwindcss": "^4",
+    "vitest": "^5.0.2"
   },
   "packageManager": "pnpm@11.8.0"
 }

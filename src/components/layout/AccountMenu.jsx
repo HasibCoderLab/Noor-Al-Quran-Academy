@@ -6,12 +6,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, LayoutDashboard, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import Avatar from "../ui/Avatar";
 import { useAuth } from "../../context/AuthContext";
 import { scaleFade } from "../../lib/animations";
 
 export default function AccountMenu() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -55,7 +57,7 @@ export default function AccountMenu() {
   const handleLogout = async () => {
     setOpen(false);
     await logout();
-    toast.success("Logged out.");
+    toast.success(t("auth.loggedOut"));
     router.push("/");
   };
 
@@ -108,7 +110,7 @@ export default function AccountMenu() {
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary/80 transition hover:bg-secondary hover:text-primary"
             >
               <UserRound className="h-4 w-4 text-primary/50" />
-              Profile
+              {t("nav.profile")}
             </Link>
 
             <Link
@@ -118,7 +120,7 @@ export default function AccountMenu() {
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary/80 transition hover:bg-secondary hover:text-primary"
             >
               <LayoutDashboard className="h-4 w-4 text-primary/50" />
-              Dashboard
+              {t("nav.dashboard")}
             </Link>
 
             {user.role === "admin" && (
@@ -129,7 +131,7 @@ export default function AccountMenu() {
                 className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-primary/80 transition hover:bg-secondary hover:text-primary"
               >
                 <ShieldCheck className="h-4 w-4 text-primary/50" />
-                Admin
+                {t("nav.admin")}
               </Link>
             )}
 
@@ -140,7 +142,7 @@ export default function AccountMenu() {
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {t("nav.logout")}
             </button>
           </motion.div>
         )}

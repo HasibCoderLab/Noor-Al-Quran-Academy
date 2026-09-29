@@ -9,6 +9,7 @@ import QuickActions from "./QuickActions";
 import TypingIndicator from "./TypingIndicator";
 import { getAIResponse, WELCOME_MESSAGE } from "../../data/noorAI";
 import { aiWindowVariants } from "../../lib/animations";
+import { useTranslation } from "react-i18next";
 
 const uid = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
@@ -16,11 +17,12 @@ const uid = () =>
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export default function NoorAIWindow({ onClose, onMinimize }) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState(() => [
     {
       id: uid(),
       role: "ai",
-      text: WELCOME_MESSAGE,
+      text: t("ai.welcome", { defaultValue: WELCOME_MESSAGE }),
       time: new Date(),
     },
   ]);
@@ -96,7 +98,7 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
       exit="exit"
       role="dialog"
       aria-modal="true"
-      aria-label="Noor AI assistant chat"
+      aria-label={t("ai.chatAria")}
       className="fixed inset-x-0 bottom-0 z-50 flex h-[92dvh] max-h-[100dvh] flex-col overflow-hidden rounded-t-3xl border border-accent/30 bg-background/85 shadow-[0_20px_70px_-20px_rgba(27,67,50,0.55)] backdrop-blur-2xl md:inset-x-auto md:end-4 md:bottom-28 md:h-[650px] md:max-h-[calc(100dvh-8rem)] md:w-[420px] md:rounded-3xl"
     >
       {/* Header */}
@@ -114,10 +116,10 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
           </span>
           <div className="min-w-0">
             <p className="font-hind-siliguri truncate text-base font-bold text-primary">
-              Noor AI
+              {t("ai.name")}
             </p>
             <p className="truncate text-xs text-primary/55">
-              Your Quran Learning Assistant
+              {t("ai.subtitle")}
             </p>
           </div>
         </div>
@@ -126,7 +128,7 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
           <button
             type="button"
             onClick={onMinimize}
-            aria-label="Minimize Noor AI"
+            aria-label={t("ai.minimize")}
             className="flex h-9 w-9 items-center justify-center rounded-full text-primary/60 transition hover:bg-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <Minus className="h-4 w-4" aria-hidden="true" />
@@ -134,7 +136,7 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close Noor AI"
+            aria-label={t("ai.close")}
             className="flex h-9 w-9 items-center justify-center rounded-full text-primary/60 transition hover:bg-secondary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -186,7 +188,7 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
         <button
           type="button"
           disabled
-          aria-label="Attach file (coming soon)"
+          aria-label={t("ai.attach")}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-primary/25 transition focus-visible:outline-none"
         >
           <Paperclip className="h-5 w-5" aria-hidden="true" />
@@ -198,15 +200,15 @@ export default function NoorAIWindow({ onClose, onMinimize }) {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask me anything…"
-          aria-label="Type your message"
+          placeholder={t("ai.placeholder")}
+          aria-label={t("ai.inputAria")}
           className="h-11 min-w-0 flex-1 rounded-full border border-primary/15 bg-background px-4 text-base text-primary outline-none transition placeholder:text-primary/40 focus:border-accent focus:ring-2 focus:ring-accent/30"
         />
 
         <button
           type="submit"
           disabled={!input.trim() || typing}
-          aria-label="Send message"
+          aria-label={t("ai.send")}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-white shadow-md transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
         >
           <Send className="h-5 w-5" aria-hidden="true" />

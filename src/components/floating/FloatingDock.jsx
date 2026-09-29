@@ -7,6 +7,7 @@ import { Sparkles, X, MessageCircle } from "lucide-react";
 import NoorAIWindow from "../ai/NoorAIWindow";
 import { SITE } from "../../data/siteData";
 import { fabStackContainer, fabStackItem } from "../../lib/animations";
+import { useTranslation } from "react-i18next";
 
 const WhatsAppIcon = ({ className = "h-5 w-5" }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -15,6 +16,7 @@ const WhatsAppIcon = ({ className = "h-5 w-5" }) => (
 );
 
 export default function FloatingDock() {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
 
@@ -51,28 +53,23 @@ export default function FloatingDock() {
   const linkPills = [
     {
       id: "whatsapp",
-      label: "WhatsApp",
+      label: t("common.whatsapp"),
       icon: (
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm">
           <WhatsAppIcon className="h-4 w-4" />
         </span>
       ),
       href: SITE.whatsapp,
-      // TODO:
-      // Replace SITE.whatsapp with the real academy WhatsApp number
-      // (use the "wa.me/<real number>" format without spaces).
     },
     {
       id: "messenger",
-      label: "Messenger",
+      label: t("common.messenger"),
       icon: (
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#0084FF] text-white shadow-sm">
           <MessageCircle className="h-4 w-4 fill-current" aria-hidden="true" />
         </span>
       ),
-      href: "https://m.me/nooralquranacademy",
-      // TODO:
-      // Connect the academy's Messenger profile URL once the page is live.
+      href: SITE.messenger,
     },
   ];
 
@@ -109,7 +106,7 @@ export default function FloatingDock() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setExpanded(false)}
-                    aria-label={`Open ${pill.label}`}
+                    aria-label={t("dock.open", { label: pill.label })}
                     className={pillClasses}
                   >
                     {pill.icon}
@@ -122,13 +119,13 @@ export default function FloatingDock() {
                 <button
                   type="button"
                   onClick={openAI}
-                  aria-label="Open Noor AI assistant"
+                  aria-label={t("ai.open")}
                   className={pillClasses}
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_22%,#3d7a5f_0%,var(--color-primary)_56%,var(--color-accent)_165%)] text-white shadow-sm">
                     <Sparkles className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <span>Noor AI</span>
+                  <span>{t("ai.name")}</span>
                 </button>
               </motion.div>
 
@@ -145,11 +142,11 @@ export default function FloatingDock() {
                 <button
                   type="button"
                   onClick={collapse}
-                  aria-label="Close menu"
+                  aria-label={t("common.close")}
                   className={`${pillClasses} bg-white/70 text-primary/60`}
                 >
                   <X className="h-5 w-5" aria-hidden="true" />
-                  <span>Close</span>
+                  <span>{t("common.close")}</span>
                 </button>
               </motion.div>
             </motion.div>
@@ -161,7 +158,7 @@ export default function FloatingDock() {
           whileHover={{ scale: 1.06, y: -4 }}
           whileTap={{ scale: 0.95 }}
           onClick={handleFabClick}
-          aria-label={aiOpen ? "Close Noor AI" : expanded ? "Open Noor AI assistant" : "Open assistant menu"}
+          aria-label={aiOpen ? t("ai.close") : expanded ? t("ai.open") : t("ai.openMenu")}
           aria-expanded={expanded || aiOpen}
           className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_22%,#3d7a5f_0%,var(--color-primary)_56%,var(--color-accent)_165%)] text-white shadow-[0_16px_48px_-12px_rgba(27,67,50,0.75)] ring-1 ring-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 md:h-16 md:w-16 lg:h-[68px] lg:w-[68px]"
         >

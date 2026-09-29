@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Trans, useTranslation } from "react-i18next";
 
 import { styles } from "../styles/commonStyles";
 import { scaleFade, slideFromBottom } from "../lib/animations";
 
 export default function NotFound() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden bg-secondary pb-20 pt-28 lg:pt-32">
       <div className="pattern-overlay" aria-hidden="true" />
@@ -26,7 +29,7 @@ export default function NotFound() {
             ﴾ وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِّلْمُؤْمِنِينَ ﴿
           </motion.span>
           <p className="mt-1.5 text-xs font-medium text-primary/50">
-            Surah Al-Isra · 17:82
+            {t("notFound.surah")}
           </p>
 
           <h1
@@ -37,34 +40,41 @@ export default function NotFound() {
           </h1>
 
           <p className="mt-2 text-sm font-semibold uppercase tracking-widest text-accent">
-            Page not found
+            {t("notFound.label")}
           </p>
 
           <h2 className="font-hind-siliguri mt-5 text-2xl font-bold text-primary sm:text-3xl">
-            This page has wandered off the path
+            {t("notFound.title")}
           </h2>
 
           <p className="mt-3 max-w-md text-base leading-relaxed text-primary/70">
-            The page you are looking for does not exist or has been moved.
-            Let&apos;s guide you back to the recitation.
+            {t("notFound.body")}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link href="/" className={styles.btnAccent}>
-              ← Back to Home
+              {t("notFound.home")}
             </Link>
             <Link href="/#courses" className={styles.btnOutline}>
-              View Courses
+              {t("notFound.courses")}
             </Link>
           </div>
 
           <p className="mt-10 text-xs font-medium text-primary/40">
-            Need help? Message us on{" "}
-            <span className="font-semibold text-primary/60">WhatsApp</span> or visit the{" "}
-            <Link href="/free-trial" className="font-semibold text-primary hover:text-accent">
-              Free Trial
-            </Link>{" "}
-            page.
+            <Trans
+              i18nKey="notFound.help"
+              components={{
+                strong: (
+                  <strong className="font-semibold text-primary/60" />
+                ),
+                a: (
+                  <Link
+                    href="/free-trial"
+                    className="font-semibold text-primary hover:text-accent"
+                  />
+                ),
+              }}
+            />
           </p>
         </div>
       </motion.div>

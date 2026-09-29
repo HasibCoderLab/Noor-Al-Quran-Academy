@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const makeDotVariants = (delay) => ({
   hidden: { y: 0, opacity: 0.4 },
@@ -15,8 +16,9 @@ const makeDotVariants = (delay) => ({
 });
 
 export default function TypingIndicator() {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-end gap-2" role="status" aria-label="Noor AI is typing">
+    <div className="flex items-end gap-2" role="status" aria-label={t("ai.typing")}>
       <span
         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent"
         aria-hidden="true"

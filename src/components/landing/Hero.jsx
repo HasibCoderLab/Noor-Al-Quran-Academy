@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Trans, useTranslation } from "react-i18next";
 
 import { SITE, STATS } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
@@ -16,6 +17,8 @@ const flags = [
 ];
 
 export default function Hero() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden bg-gradient-to-b from-secondary via-background to-background pt-24 pb-20 lg:pt-28">
       <div className="pattern-overlay" aria-hidden="true" />
@@ -38,34 +41,40 @@ export default function Hero() {
             ﴾ وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ ﴿
           </motion.span>
           <p className="mt-1.5 text-xs font-medium text-primary/50">
-            Surah Al-Qamar · 54:17
+            {t("landing.hero.surah")}
           </p>
 
           <h1 className="font-hind-siliguri mt-5 text-4xl font-extrabold leading-tight text-primary sm:text-5xl lg:text-6xl">
-            Learn the <span className={styles.gradientText}>Holy Quran</span> with
-            a Certified{" "}
-            <span className="relative inline-block">
-              Hafiz
-              <motion.span
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-                className="absolute -bottom-1 left-0 h-1.5 w-full origin-left rounded-full bg-accent"
-              />
-            </span>
+            <Trans
+              i18nKey="landing.hero.title"
+              components={{
+                highlight: <span className={styles.gradientText} />,
+                hafiz: <span className="relative inline-block" />,
+                underline: (
+                  <motion.span
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+                    className="absolute -bottom-1 left-0 h-1.5 w-full origin-left rounded-full bg-accent"
+                  />
+                ),
+              }}
+            />
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-primary/70 sm:text-lg">
-            One-to-one online Tajweed, Hifz, Nazra and Masnoon Dua classes with{" "}
-            {SITE.teacher} ({SITE.teacherTitle}).
+            {t("landing.hero.subtitle", {
+              teacher: SITE.teacher,
+              title: SITE.teacherTitle,
+            })}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link href="/free-trial" className={`${styles.btnAccent} w-full sm:w-auto`}>
-              Book Free Trial
+              {t("landing.hero.bookTrial")}
             </Link>
             <Link href="/#courses" className={`${styles.btnOutline} w-full sm:w-auto`}>
-              View Courses →
+              {t("landing.hero.viewCourses")}
             </Link>
           </div>
 
@@ -114,7 +123,7 @@ export default function Hero() {
 
               <div
                 className="mt-3 flex gap-0.5 text-accent"
-                aria-label="5 out of 5 stars"
+                aria-label={t("landing.hero.teacherRating")}
               >
                 {Array.from({ length: 5 }, (_, i) => (
                   <span key={i}>★</span>
@@ -123,7 +132,7 @@ export default function Hero() {
 
               {/* Stats grid */}
               <div className="mt-6 grid w-full grid-cols-2 gap-3">
-                {STATS.map((stat) => (
+                {STATS.map((stat, index) => (
                   <div
                     key={stat.label}
                     className="rounded-xl bg-white/10 p-3 text-center backdrop-blur-sm"
@@ -131,7 +140,9 @@ export default function Hero() {
                     <p className="font-hind-siliguri text-xl font-bold text-accent">
                       {stat.value}
                     </p>
-                    <p className="text-xs text-white/70">{stat.label}</p>
+                    <p className="text-xs text-white/70">
+                      {t(`landing.stats.${index}.label`)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -144,7 +155,8 @@ export default function Hero() {
             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             className="absolute -start-4 top-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-primary shadow-lg ring-1 ring-primary/10"
           >
-            <span className="text-accent">✓</span> Free Trial Available
+            <span className="text-accent">✓</span>{" "}
+            {t("landing.hero.freeTrialBadge")}
           </motion.div>
         </motion.div>
       </div>

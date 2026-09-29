@@ -13,7 +13,12 @@ export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
 export function signToken(user) {
   return jwt.sign(
-    { sub: String(user._id), email: user.email, role: user.role },
+    {
+      sub: String(user._id),
+      email: user.email,
+      role: user.role,
+      tokenVersion: user.tokenVersion || 0,
+    },
     JWT_SECRET,
     { expiresIn: "7d" }
   );
@@ -56,6 +61,7 @@ export function toPublicUser(user) {
     country: user.country || "",
     whatsapp: user.whatsapp || "",
     role: user.role,
+    emailVerified: user.emailVerified !== false,
     createdAt: user.createdAt || "",
   };
 }

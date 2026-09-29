@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 import SectionWrapper from "../ui/SectionWrapper";
 import { TESTIMONIALS } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
@@ -23,15 +27,19 @@ function Stars({ rating }) {
 }
 
 export default function Testimonials() {
+  const { t } = useTranslation();
+
   return (
     <SectionWrapper id="testimonials" bg="alt" direction="bottom">
       <div className={styles.sectionHeader}>
-        <span className={styles.badgeGold}>Testimonials</span>
-        <h2 className={`${styles.sectionTitle} mt-4`}>What Students Say</h2>
+        <span className={styles.badgeGold}>
+          {t("landing.testimonials.badge")}
+        </span>
+        <h2 className={`${styles.sectionTitle} mt-4`}>
+          {t("landing.testimonials.title")}
+        </h2>
         <div className={styles.goldDivider} />
-        <p className={styles.sectionSub}>
-          Hear from students and parents across the world who learn with us.
-        </p>
+        <p className={styles.sectionSub}>{t("landing.testimonials.sub")}</p>
       </div>
 
       <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

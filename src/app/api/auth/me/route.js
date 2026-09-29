@@ -10,14 +10,20 @@ export async function GET(request) {
     const payload = token ? verifyToken(token) : null;
 
     if (!payload?.sub) {
-      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Not authenticated.", code: "NOT_AUTHENTICATED" },
+        { status: 401 }
+      );
     }
 
     await connectDB();
 
     const user = await User.findById(payload.sub);
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    if (!user || (payload.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+      return NextResponse.json(
+        { error: "Not authenticated.", code: "NOT_AUTHENTICATED" },
+        { status: 401 }
+      );
     }
 
     return NextResponse.json({ user: toPublicUser(user) });

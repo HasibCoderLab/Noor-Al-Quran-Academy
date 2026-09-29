@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import SectionWrapper from "../ui/SectionWrapper";
 import { COURSES } from "../../data/siteData";
@@ -35,16 +36,17 @@ const icons = {
 };
 
 export default function Courses() {
+  const { t } = useTranslation();
+
   return (
     <SectionWrapper id="courses" direction="bottom">
       <div className={styles.sectionHeader}>
-        <span className={styles.badgeGold}>Our Courses</span>
-        <h2 className={`${styles.sectionTitle} mt-4`}>Learn the Quran Properly</h2>
+        <span className={styles.badgeGold}>{t("landing.courses.badge")}</span>
+        <h2 className={`${styles.sectionTitle} mt-4`}>
+          {t("landing.courses.title")}
+        </h2>
         <div className={styles.goldDivider} />
-        <p className={styles.sectionSub}>
-          One-to-one online classes in Tajweed, Hifz, Nazra and Masnoon Duas —
-          taught personally by Hafiz ul Quran Ustadh Hasib Hasan.
-        </p>
+        <p className={styles.sectionSub}>{t("landing.courses.sub")}</p>
       </div>
 
       <motion.div

@@ -30,6 +30,41 @@ export const auth = {
     return request("/api/auth/logout", { method: "POST" });
   },
 
+  verifyEmail(payload) {
+    return request("/api/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  resendVerification(payload) {
+    return request("/api/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  forgotPassword(payload) {
+    return request("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  resetPassword(payload) {
+    return request("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  changePassword(payload) {
+    return request("/api/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   updateProfile(payload) {
     return request("/api/auth/profile", {
       method: "PATCH",

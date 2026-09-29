@@ -7,6 +7,7 @@ import Footer from "../components/layout/Footer";
 import AppToaster from "../components/ui/Toaster";
 import FloatingDock from "../components/floating/FloatingDock";
 import { AuthProvider } from "../context/AuthContext";
+import { I18nProvider } from "../components/providers/I18nProvider";
 import { SITE } from "../data/siteData";
 
 const inter = Inter({
@@ -28,6 +29,10 @@ const amiri = Amiri({
   variable: "--font-amiri",
   display: "swap",
 });
+
+export const viewport = {
+  themeColor: "#1b4332",
+};
 
 export const metadata = {
   title: {
@@ -54,13 +59,15 @@ export default function RootLayout({ children }) {
       className={`${inter.variable} ${hindSiliguri.variable} ${amiri.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <AppToaster />
-          <FloatingDock />
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <AppToaster />
+            <FloatingDock />
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );

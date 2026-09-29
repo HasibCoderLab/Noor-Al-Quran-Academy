@@ -2,15 +2,17 @@ import { motion } from "framer-motion";
 
 import { QUICK_ACTIONS } from "../../data/noorAI";
 import { chipIn } from "../../lib/animations";
+import { useTranslation } from "react-i18next";
 
 export default function QuickActions({ onSelect }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
       initial="hidden"
       animate="visible"
       className="flex gap-2 overflow-x-auto pb-1 no-scrollbar"
-      aria-label="Quick questions"
+      aria-label={t("ai.quickActions")}
     >
       {QUICK_ACTIONS.map((action) => (
         <motion.button
@@ -21,7 +23,7 @@ export default function QuickActions({ onSelect }) {
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/15 bg-white px-3.5 py-2 text-xs font-semibold text-primary shadow-sm transition hover:-translate-y-0.5 hover:border-accent/50 hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           <span aria-hidden="true">{action.label.split(" ")[0]}</span>
-          <span>{action.label.split(" ").slice(1).join(" ")}</span>
+          <span>{t("ai.quick." + action.id, { defaultValue: action.label.split(" ").slice(1).join(" ") })}</span>
         </motion.button>
       ))}
     </motion.div>

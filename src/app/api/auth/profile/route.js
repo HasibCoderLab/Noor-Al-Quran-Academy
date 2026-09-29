@@ -10,21 +10,30 @@ export async function PATCH(request) {
     const payload = token ? verifyToken(token) : null;
 
     if (!payload?.sub) {
-      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+      return NextResponse.json(
+        { error: "Not authenticated.", code: "NOT_AUTHENTICATED" },
+        { status: 401 }
+      );
     }
 
     let body;
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request body", code: "INVALID_BODY" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
 
     const user = await User.findById(payload.sub);
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    if (!user || (payload.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+      return NextResponse.json(
+        { error: "Not authenticated.", code: "NOT_AUTHENTICATED" },
+        { status: 401 }
+      );
     }
 
     if (typeof body.name === "string" && body.name.trim()) {

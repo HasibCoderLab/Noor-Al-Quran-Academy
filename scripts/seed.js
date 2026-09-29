@@ -32,6 +32,14 @@ async function seed() {
 
   await mongoose.connect(process.env.MONGODB_URI);
 
+  const backfill = await User.updateMany(
+    { emailVerified: { $exists: false } },
+    { $set: { emailVerified: true } }
+  );
+  if (backfill.modifiedCount > 0) {
+    console.log(`[seed] Marked ${backfill.modifiedCount} legacy user(s) as verified`);
+  }
+
   for (const data of SEED_USERS) {
     const existing = await User.findOne({ email: data.email });
     if (existing) {

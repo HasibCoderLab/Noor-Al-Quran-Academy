@@ -5,12 +5,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogOut } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useScrollDirection } from "../../hooks/useScrollDirection";
-import i18n from "../../lib/i18n";
 import { NAV_LINKS, SITE } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { useAuth } from "../../context/AuthContext";
+import { useLang } from "../providers/I18nProvider";
 import Avatar from "../ui/Avatar";
 import AccountMenu from "./AccountMenu";
 import {
@@ -22,20 +23,15 @@ import {
   scaleFade,
 } from "../../lib/animations";
 
-const LANGS = [
-  { code: "en", flag: "🇬🇧", label: "EN" },
-  { code: "bn", flag: "🇧🇩", label: "BN" },
-  { code: "ar", flag: "🇸🇦", label: "AR" },
-];
-
 export default function Navbar() {
+  const { t } = useTranslation();
+  const { lang, setLang, languages } = useLang();
   const { scrollDir, isAtTop } = useScrollDirection();
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [hash, setHash] = useState("");
-  const [lang, setLang] = useState("en");
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef(null);
 
@@ -46,13 +42,6 @@ export default function Navbar() {
     const onHashChange = () => setHash(window.location.hash.replace("#", ""));
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("lang") || "en";
-    setLang(stored);
-    document.documentElement.dir = stored === "ar" ? "rtl" : "ltr";
-    i18n.changeLanguage(stored);
   }, []);
 
   useEffect(() => {
@@ -75,9 +64,6 @@ export default function Navbar() {
   const applyLang = (code) => {
     setLang(code);
     setLangOpen(false);
-    localStorage.setItem("lang", code);
-    document.documentElement.dir = code === "ar" ? "rtl" : "ltr";
-    i18n.changeLanguage(code);
   };
 
   const isActive = (href) => {
@@ -119,7 +105,7 @@ export default function Navbar() {
               {SITE.name}
             </span>
             <span className="text-xs font-medium uppercase tracking-wider text-primary/60">
-              Online Academy
+              {t("common.onlineAcademy")}
             </span>
           </span>
         </Link>
@@ -134,7 +120,7 @@ export default function Navbar() {
                 isActive(link.href) ? "text-accent" : "text-primary/80"
               }`}
             >
-              {link.label}
+              {t(link.key)}
               {isActive(link.href) && (
                 <motion.span
                   layoutId="activeNavDot"
@@ -148,7 +134,7 @@ export default function Navbar() {
           <div ref={langRef} className="relative">
             <button
               onClick={() => setLangOpen((prev) => !prev)}
-              aria-label="Language"
+              aria-label={t("common.language")}
               aria-haspopup="listbox"
               aria-expanded={langOpen}
               className={`flex items-center justify-center rounded-full p-2 transition ${
@@ -181,7 +167,7 @@ export default function Navbar() {
                   exit="hidden"
                   className="absolute end-0 top-full mt-2 w-32 overflow-hidden rounded-xl bg-white p-1 shadow-lg ring-1 ring-primary/10"
                 >
-                  {LANGS.map((item) => (
+                  {languages.map((item) => (
                     <li key={item.code}>
                       <button
                         onClick={() => applyLang(item.code)}
@@ -221,7 +207,7 @@ export default function Navbar() {
                 className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                {t("nav.logout")}
               </button>
             </>
           ) : isAuthenticated ? (
@@ -229,7 +215,7 @@ export default function Navbar() {
               <AccountMenu />
               <motion.span variants={hoverScale} className="inline-flex">
                 <Link href="/free-trial" className={styles.btnAccent}>
-                  Free Trial
+                  {t("nav.freeTrial")}
                 </Link>
               </motion.span>
             </>
@@ -237,12 +223,12 @@ export default function Navbar() {
             <>
               <motion.span variants={hoverScale} className="inline-flex">
                 <Link href="/login" className={styles.btnGhost}>
-                  Login
+                  {t("nav.login")}
                 </Link>
               </motion.span>
               <motion.span variants={hoverScale} className="inline-flex">
                 <Link href="/free-trial" className={styles.btnAccent}>
-                  Free Trial
+                  {t("nav.freeTrial")}
                 </Link>
               </motion.span>
             </>
@@ -253,7 +239,7 @@ export default function Navbar() {
         <motion.button
           onClick={() => setIsOpen((prev) => !prev)}
           animate={isOpen ? "open" : "closed"}
-          aria-label={isOpen ? "Close menu" : "Open menu"}
+          aria-label={isOpen ? t("nav.closeMenu") : t("nav.openMenu")}
           aria-expanded={isOpen}
           className="relative z-50 flex h-11 w-11 flex-col items-center justify-center gap-1.5 xl:hidden"
         >
@@ -314,17 +300,17 @@ export default function Navbar() {
                           className="h-1.5 w-1.5 rounded-full bg-accent"
                         />
                       )}
-                      {link.label}
+                      {t(link.key)}
                     </Link>
                   </motion.li>
                 ))}
 
                 <motion.li variants={staggerItem} className="mt-4 flex flex-col gap-3 border-t border-primary/10 pt-4">
                   <p className="px-4 text-xs font-bold uppercase tracking-wider text-primary/50">
-                    Language
+                    {t("common.language")}
                   </p>
                   <div className="flex gap-1 px-4">
-                    {LANGS.map((item) => (
+                    {languages.map((item) => (
                       <button
                         key={item.code}
                         onClick={() => applyLang(item.code)}
@@ -360,7 +346,7 @@ export default function Navbar() {
                         onClick={() => setIsOpen(false)}
                         className={styles.btnOutline}
                       >
-                        Dashboard
+                        {t("nav.dashboard")}
                       </Link>
                       {user.role === "admin" && (
                         <Link
@@ -368,7 +354,7 @@ export default function Navbar() {
                           onClick={() => setIsOpen(false)}
                           className={styles.btnOutline}
                         >
-                          Admin
+                          {t("nav.admin")}
                         </Link>
                       )}
                       <Link
@@ -376,14 +362,14 @@ export default function Navbar() {
                         onClick={() => setIsOpen(false)}
                         className={styles.btnAccent}
                       >
-                        Book Free Trial
+                        {t("nav.bookFreeTrial")}
                       </Link>
                       <button
                         type="button"
                         onClick={handleMobileLogout}
                         className={styles.btnGhost}
                       >
-                        Logout
+                        {t("nav.logout")}
                       </button>
                     </>
                   ) : (
@@ -393,21 +379,21 @@ export default function Navbar() {
                         onClick={() => setIsOpen(false)}
                         className={styles.btnGhost}
                       >
-                        Login
+                        {t("nav.login")}
                       </Link>
                       <Link
                         href="/register"
                         onClick={() => setIsOpen(false)}
                         className={styles.btnOutline}
                       >
-                        Register
+                        {t("nav.register")}
                       </Link>
                       <Link
                         href="/free-trial"
                         onClick={() => setIsOpen(false)}
                         className={styles.btnAccent}
                       >
-                        Book Free Trial
+                        {t("nav.bookFreeTrial")}
                       </Link>
                     </>
                   )}

@@ -13,6 +13,7 @@ export const SITE = {
   phone: "+8801XXXXXXXXX",
   bKashNumber: "01XXXXXXXXX",
   facebook: "https://facebook.com/nooralquranacademy",
+  messenger: "https://m.me/nooralquranacademy",
   whatsapp: "https://wa.me/8801XXXXXXXXX",
   targetCountries: ["Italy", "USA", "UK", "Saudi Arabia", "Bangladesh"],
   subjects: ["tajweed", "hifz", "nazra", "dua"],
@@ -24,12 +25,12 @@ export const SITE = {
 };
 
 export const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Courses", href: "/#courses" },
-  { label: "About", href: "/#about" },
-  { label: "Pricing", href: "/#pricing" },
-  { label: "Testimonials", href: "/#testimonials" },
-  { label: "FAQ", href: "/#faq" },
+  { key: "nav.home", label: "Home", href: "/" },
+  { key: "nav.courses", label: "Courses", href: "/#courses" },
+  { key: "nav.about", label: "About", href: "/#about" },
+  { key: "nav.pricing", label: "Pricing", href: "/#pricing" },
+  { key: "nav.testimonials", label: "Testimonials", href: "/#testimonials" },
+  { key: "nav.faq", label: "FAQ", href: "/#faq" },
 ];
 
 export const COURSES = [
@@ -237,11 +238,11 @@ export const FAQS = [
 
 export const FOOTER_LINKS = {
   quickLinks: [
-    { label: "Home", href: "/" },
-    { label: "Courses", href: "/#courses" },
-    { label: "About", href: "/#about" },
-    { label: "Pricing", href: "/#pricing" },
-    { label: "FAQ", href: "/#faq" },
+    { key: "nav.home", label: "Home", href: "/" },
+    { key: "nav.courses", label: "Courses", href: "/#courses" },
+    { key: "nav.about", label: "About", href: "/#about" },
+    { key: "nav.pricing", label: "Pricing", href: "/#pricing" },
+    { key: "nav.faq", label: "FAQ", href: "/#faq" },
   ],
   account: [
     { label: "Login", href: "/login" },

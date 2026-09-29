@@ -25,6 +25,7 @@ import { COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { scaleFade } from "../../lib/animations";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const STATUSES = ["pending", "confirmed", "completed", "cancelled"];
 const PAGE_SIZE = 20;
@@ -67,23 +68,16 @@ const STATUS_STYLES = {
   cancelled: "bg-red-100 text-red-600",
 };
 
-const STATUS_LABELS = {
-  pending: "Pending",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-};
-
 const initialFilters = { status: "", search: "", page: 1 };
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, label }) {
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
         STATUS_STYLES[status] || "bg-secondary text-primary/70"
       }`}
     >
-      {STATUS_LABELS[status] || status}
+      {label || status}
     </span>
   );
 }
@@ -112,6 +106,7 @@ function StatCard({ icon, label, value }) {
 }
 
 function ConfirmDialog({ title, message, confirmLabel, tone, onConfirm, onClose }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       variants={scaleFade}
@@ -138,7 +133,7 @@ function ConfirmDialog({ title, message, confirmLabel, tone, onConfirm, onClose 
             onClick={onClose}
             className={`${styles.btnGhost} flex-1`}
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -158,17 +153,18 @@ function ConfirmDialog({ title, message, confirmLabel, tone, onConfirm, onClose 
 }
 
 function BookingDetailModal({ booking, onClose }) {
+  const { t } = useTranslation();
   if (!booking) return null;
 
   const details = [
-    { icon: <UserRound className="h-4 w-4" />, label: "Student", value: booking.name },
-    { icon: <Mail className="h-4 w-4" />, label: "Email", value: booking.email },
-    { icon: <Phone className="h-4 w-4" />, label: "WhatsApp", value: booking.whatsapp },
-    { icon: <Globe className="h-4 w-4" />, label: "Country", value: booking.country || "—" },
-    { icon: <GraduationCap className="h-4 w-4" />, label: "Course", value: courseName(booking.course) },
-    { icon: <Clock className="h-4 w-4" />, label: "Preferred time", value: `${booking.time || "—"} ${booking.day ? `(${booking.day})` : ""} Dhaka` },
-    { icon: <Clock className="h-4 w-4" />, label: "Duration", value: `${booking.duration || 30} min` },
-    { icon: <ShieldAlert className="h-4 w-4" />, label: "Status", value: STATUS_LABELS[booking.status] || booking.status },
+    { icon: <UserRound className="h-4 w-4" />, label: t("common.student"), value: booking.name },
+    { icon: <Mail className="h-4 w-4" />, label: t("common.email"), value: booking.email },
+    { icon: <Phone className="h-4 w-4" />, label: t("common.whatsapp"), value: booking.whatsapp },
+    { icon: <Globe className="h-4 w-4" />, label: t("common.country"), value: booking.country || "—" },
+    { icon: <GraduationCap className="h-4 w-4" />, label: t("common.course"), value: courseName(booking.course) },
+    { icon: <Clock className="h-4 w-4" />, label: t("admin.detail.preferredTime"), value: `${booking.time || "—"} ${booking.day ? `(${booking.day})` : ""} ${t("common.dhakaTime")}` },
+    { icon: <Clock className="h-4 w-4" />, label: t("common.duration"), value: t("common.min", { count: booking.duration || 30 }) },
+    { icon: <ShieldAlert className="h-4 w-4" />, label: t("common.status"), value: t("booking.status." + booking.status) },
   ];
 
   return (
@@ -181,7 +177,7 @@ function BookingDetailModal({ booking, onClose }) {
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Booking details"
+      aria-label={t("admin.detail.title")}
     >
       <div
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-7 shadow-xl"
@@ -190,16 +186,16 @@ function BookingDetailModal({ booking, onClose }) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="font-hind-siliguri text-lg font-bold text-primary">
-              Booking details
+              {t("admin.detail.title")}
             </h3>
             <p className="mt-0.5 text-xs text-primary/50">
-              Created {formatDateTime(booking.createdAt)}
+              {t("admin.detail.created", { date: formatDateTime(booking.createdAt) })}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t("common.close")}
             className="rounded-full p-2 text-primary/60 transition hover:bg-secondary hover:text-primary"
           >
             <X className="h-5 w-5" />
@@ -230,7 +226,7 @@ function BookingDetailModal({ booking, onClose }) {
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wider text-primary/50">
-                Message
+                {t("common.message")}
               </p>
               <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-primary">
                 {booking.message || "—"}
@@ -245,7 +241,7 @@ function BookingDetailModal({ booking, onClose }) {
               </span>
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wider text-accent">
-                  Registered account
+                  {t("admin.detail.registeredAccount")}
                 </p>
                 <p className="mt-0.5 text-sm font-semibold text-primary">
                   {booking.user.name || "—"}
@@ -272,7 +268,7 @@ function BookingRow({ booking, onView, onAction }) {
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
         >
           <Check className="h-3.5 w-3.5" />
-          Confirm
+          {t("admin.action.confirm")}
         </button>
       )}
       {(booking.status === "pending" || booking.status === "confirmed") && (
@@ -282,7 +278,7 @@ function BookingRow({ booking, onView, onAction }) {
           className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
         >
           <X className="h-3.5 w-3.5" />
-          Reject
+          {t("admin.action.reject")}
         </button>
       )}
       {booking.status === "confirmed" && (
@@ -292,7 +288,7 @@ function BookingRow({ booking, onView, onAction }) {
           className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-secondary"
         >
           <Check className="h-3.5 w-3.5" />
-          Complete
+          {t("admin.action.complete")}
         </button>
       )}
       <button
@@ -300,7 +296,7 @@ function BookingRow({ booking, onView, onAction }) {
         onClick={onView}
         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary/60 transition hover:bg-secondary hover:text-primary"
       >
-        View
+        {t("admin.action.view")}
       </button>
     </div>
   );
@@ -332,7 +328,7 @@ function BookingRow({ booking, onView, onAction }) {
       </td>
       <td className="px-4 py-4 align-top">
         <div className="flex flex-col items-start gap-2">
-          <StatusBadge status={booking.status} />
+          <StatusBadge status={booking.status} label={t("booking.status." + booking.status)} />
           {controls}
         </div>
       </td>
@@ -350,7 +346,7 @@ function BookingCard({ booking, onView, onAction }) {
           className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
         >
           <Check className="h-3.5 w-3.5" />
-          Confirm
+          {t("admin.action.confirm")}
         </button>
       )}
       {(booking.status === "pending" || booking.status === "confirmed") && (
@@ -360,7 +356,7 @@ function BookingCard({ booking, onView, onAction }) {
           className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
         >
           <X className="h-3.5 w-3.5" />
-          Reject
+          {t("admin.action.reject")}
         </button>
       )}
       {booking.status === "confirmed" && (
@@ -370,7 +366,7 @@ function BookingCard({ booking, onView, onAction }) {
           className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-secondary"
         >
           <Check className="h-3.5 w-3.5" />
-          Complete
+          {t("admin.action.complete")}
         </button>
       )}
       <button
@@ -378,7 +374,7 @@ function BookingCard({ booking, onView, onAction }) {
         onClick={onView}
         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary/60 transition hover:bg-secondary hover:text-primary"
       >
-        View
+        {t("admin.action.view")}
       </button>
     </div>
   );
@@ -391,7 +387,7 @@ function BookingCard({ booking, onView, onAction }) {
           <p className="break-all text-xs text-primary/50">{booking.email}</p>
           <p className="text-xs text-primary/50">{booking.whatsapp}</p>
         </div>
-        <StatusBadge status={booking.status} />
+        <StatusBadge status={booking.status} label={t("booking.status." + booking.status)} />
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-primary/60">
         <span className="font-semibold text-primary">{courseName(booking.course)}</span>
@@ -406,6 +402,7 @@ function BookingCard({ booking, onView, onAction }) {
 }
 
 export default function AdminPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [overview, setOverview] = useState(null);
@@ -446,13 +443,13 @@ export default function AdminPage() {
       const data = await response.json().catch(() => ({}));
 
       if (response.status === 403 || response.status === 401) {
-        setError("You are not authorized to view this page.");
+        setError(t("admin.error.unauthorized"));
         setBookings([]);
         setTotal(0);
         return;
       }
       if (!response.ok) {
-        setError(data.error || "Could not load bookings.");
+        setError(data.error || t("admin.error.loadFailed"));
         setBookings([]);
         setTotal(0);
         return;
@@ -462,13 +459,13 @@ export default function AdminPage() {
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("errors.network"));
       setBookings([]);
       setTotal(0);
     } finally {
       setLoadingList(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -500,13 +497,13 @@ export default function AdminPage() {
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "Could not update booking.");
+        throw new Error(data.error || t("admin.error.updateFailed"));
       }
       await loadBookings();
       await loadOverview();
       setDetail(null);
     } catch (err) {
-      setError(err.message || "Could not update booking.");
+      setError(err.message || t("admin.error.updateFailed"));
     } finally {
       setActing(false);
       setPendingAction(null);
@@ -516,7 +513,7 @@ export default function AdminPage() {
   if (isLoading) {
     return (
       <section className="flex min-h-screen items-center justify-center bg-secondary pt-16">
-        <p className="text-sm text-primary/60">Loading…</p>
+        <p className="text-sm text-primary/60">{t("common.loading")}</p>
       </section>
     );
   }
@@ -530,18 +527,17 @@ export default function AdminPage() {
             <ShieldAlert className="h-8 w-8 text-red-500" />
           </span>
           <h1 className="font-hind-siliguri mt-6 text-2xl font-bold text-primary">
-            Access denied
+            {t("admin.accessDenied")}
           </h1>
           <p className="mt-2 text-sm text-primary/60">
-            This area is for academy admins only. You are signed in as a
-            student, so you cannot view the admin dashboard.
+            {t("admin.accessDeniedBody")}
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link href="/dashboard" className={styles.btnPrimary}>
-              Go to your dashboard
+              {t("admin.goToDashboard")}
             </Link>
             <Link href="/" className={styles.btnGhost}>
-              Home
+              {t("nav.home")}
             </Link>
           </div>
         </div>
@@ -552,35 +548,35 @@ export default function AdminPage() {
   if (!user) {
     return (
       <section className="flex min-h-screen items-center justify-center bg-secondary pt-16">
-        <p className="text-sm text-primary/60">Redirecting…</p>
+        <p className="text-sm text-primary/60">{t("common.redirecting")}</p>
       </section>
     );
   }
 
   const statCards = [
-    { key: "students", label: "Total Students", value: overview?.totalStudents ?? 0, icon: <Users className="h-5 w-5" /> },
-    { key: "pending", label: "Pending Trial Requests", value: overview?.pending ?? 0, icon: <Clock className="h-5 w-5" /> },
-    { key: "confirmed", label: "Confirmed Classes", value: overview?.confirmed ?? 0, icon: <Check className="h-5 w-5" /> },
-    { key: "completed", label: "Completed Classes", value: overview?.completed ?? 0, icon: <GraduationCap className="h-5 w-5" /> },
+    { key: "students", label: t("admin.totalStudents"), value: overview?.totalStudents ?? 0, icon: <Users className="h-5 w-5" /> },
+    { key: "pending", label: t("admin.pendingTrials"), value: overview?.pending ?? 0, icon: <Clock className="h-5 w-5" /> },
+    { key: "confirmed", label: t("admin.confirmedClasses"), value: overview?.confirmed ?? 0, icon: <Check className="h-5 w-5" /> },
+    { key: "completed", label: t("admin.completedClasses"), value: overview?.completed ?? 0, icon: <GraduationCap className="h-5 w-5" /> },
   ];
 
   const confirmMeta = {
     confirm: {
-      title: "Confirm booking?",
-      message: `Confirm the trial for ${pendingAction?.name}. The student will see the updated status in their dashboard.`,
-      confirmLabel: "Confirm",
+      title: t("admin.dialog.confirmTitle"),
+      message: t("admin.dialog.confirmBody", { name: pendingAction?.name }),
+      confirmLabel: t("admin.action.confirm"),
       tone: "primary",
     },
     cancel: {
-      title: "Reject booking?",
-      message: `Cancel the trial for ${pendingAction?.name}. This action will be visible to the student.`,
-      confirmLabel: "Reject",
+      title: t("admin.dialog.cancelTitle"),
+      message: t("admin.dialog.cancelBody", { name: pendingAction?.name }),
+      confirmLabel: t("admin.action.reject"),
       tone: "danger",
     },
     complete: {
-      title: "Mark as completed?",
-      message: `Mark the class for ${pendingAction?.name} as completed.`,
-      confirmLabel: "Complete",
+      title: t("admin.dialog.completeTitle"),
+      message: t("admin.dialog.completeBody", { name: pendingAction?.name }),
+      confirmLabel: t("admin.action.complete"),
       tone: "primary",
     },
   }[pendingAction?.nextStatus || ""];
@@ -593,16 +589,16 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <span className={styles.badgeGold}>Admin Dashboard</span>
+            <span className={styles.badgeGold}>{t("admin.badge")}</span>
             <h1 className="font-hind-siliguri mt-3 text-2xl font-bold text-primary sm:text-3xl">
-              Booking Management
+              {t("admin.title")}
             </h1>
             <p className="mt-1 text-sm text-primary/60">
-              Review, confirm and manage trial requests.
+              {t("admin.subtitle")}
             </p>
           </div>
           <Link href="/dashboard" className={styles.btnGhost}>
-            ← Back to Dashboard
+            {t("admin.backToDashboard")}
           </Link>
         </div>
 
@@ -623,10 +619,10 @@ export default function AdminPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-                Trial requests
+                {t("admin.trialRequests")}
               </h2>
               <p className="mt-0.5 text-sm text-primary/60">
-                {total} request{total === 1 ? "" : "s"}
+                {t("common.requestCount", { count: total })}
               </p>
             </div>
 
@@ -640,8 +636,8 @@ export default function AdminPage() {
                   onKeyDown={(event) => {
                     if (event.key === "Enter") applyFilters({ search: searchInput.trim() });
                   }}
-                  placeholder="Search name, email, WhatsApp…"
-                  aria-label="Search bookings"
+                  placeholder={t("admin.searchPlaceholder")}
+                  aria-label={t("admin.searchAria")}
                   className={`${styles.input} w-full ps-10 sm:w-64`}
                 />
               </div>
@@ -650,7 +646,7 @@ export default function AdminPage() {
                 onClick={() => applyFilters({ search: searchInput.trim() })}
                 className={styles.btnPrimary}
               >
-                Search
+                {t("common.search")}
               </button>
             </div>
           </div>
@@ -658,10 +654,10 @@ export default function AdminPage() {
           {/* Filter tabs */}
           <div className="mt-6 flex flex-wrap gap-2">
             {[
-              { value: "", label: "All" },
+              { value: "", label: t("common.all") },
               ...STATUSES.map((status) => ({
                 value: status,
-                label: STATUS_LABELS[status],
+                label: t("booking.status." + status),
               })),
             ].map((tab) => (
               <button
@@ -704,13 +700,13 @@ export default function AdminPage() {
               <p className="text-3xl">🌙</p>
               <p className="mt-3 text-sm font-semibold text-primary/70">
                 {filters.status || filters.search
-                  ? "No matching trial requests."
-                  : "No trial requests yet."}
+                  ? t("admin.emptyFiltered")
+                  : t("admin.empty")}
               </p>
               <p className="mt-1 text-xs text-primary/50">
                 {filters.status || filters.search
-                  ? "Try a different filter or search term."
-                  : "New free trial submissions will appear here."}
+                  ? t("admin.emptyFilteredHint")
+                  : t("admin.emptyHint")}
               </p>
             </div>
           ) : null}
@@ -722,13 +718,13 @@ export default function AdminPage() {
                 <table className="w-full border-collapse text-start">
                   <thead>
                     <tr className="border-b border-primary/10 text-start text-xs font-bold uppercase tracking-wider text-primary/50">
-                      <th className="px-4 py-3 text-start">Student</th>
-                      <th className="hidden px-4 py-3 text-start lg:table-cell">Country</th>
-                      <th className="hidden px-4 py-3 text-start md:table-cell">Course</th>
-                      <th className="hidden px-4 py-3 text-start md:table-cell">Preferred time</th>
-                      <th className="hidden px-4 py-3 text-start sm:table-cell">Duration</th>
-                      <th className="hidden px-4 py-3 text-start sm:table-cell">Created</th>
-                      <th className="px-4 py-3 text-start">Status</th>
+                      <th className="px-4 py-3 text-start">{t("admin.table.student")}</th>
+                      <th className="hidden px-4 py-3 text-start lg:table-cell">{t("admin.table.country")}</th>
+                      <th className="hidden px-4 py-3 text-start md:table-cell">{t("admin.table.course")}</th>
+                      <th className="hidden px-4 py-3 text-start md:table-cell">{t("admin.table.preferredTime")}</th>
+                      <th className="hidden px-4 py-3 text-start sm:table-cell">{t("admin.table.duration")}</th>
+                      <th className="hidden px-4 py-3 text-start sm:table-cell">{t("admin.table.created")}</th>
+                      <th className="px-4 py-3 text-start">{t("admin.table.status")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -769,10 +765,10 @@ export default function AdminPage() {
                     className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-primary transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Previous
+                    {t("common.previous")}
                   </button>
                   <span className="text-sm text-primary/60">
-                    Page {filters.page} of {totalPages}
+                    {t("common.pageOf", { page: filters.page, total: totalPages })}
                   </span>
                   <button
                     type="button"
@@ -780,7 +776,7 @@ export default function AdminPage() {
                     onClick={() => applyFilters({ page: filters.page + 1 })}
                     className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-primary transition hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Next
+                    {t("common.next")}
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>

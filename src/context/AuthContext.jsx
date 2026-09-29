@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(async (payload) => {
     const result = await auth.register(payload);
-    if (result.ok && result.user) setUser(result.user);
+    if (result.ok && result.user && !result.requiresVerification) setUser(result.user);
     return result;
   }, []);
 

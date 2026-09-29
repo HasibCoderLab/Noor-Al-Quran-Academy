@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import {
   ArrowLeft,
   BookOpen,
@@ -25,7 +26,9 @@ import { SITE, COURSES } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { staggerContainer, staggerItem } from "../../lib/animations";
 import { useAuth } from "../../context/AuthContext";
+import { errorMessage } from "../../lib/apiError";
 import Avatar from "../../components/ui/Avatar";
+import ChangePasswordForm from "../../components/profile/ChangePasswordForm";
 
 const courseName = (id) =>
   COURSES.find((course) => course.id === id)?.name || id || "—";
@@ -44,6 +47,7 @@ const formatDate = (iso) => {
 };
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { user, isLoading, updateUser } = useAuth();
   const [bookings, setBookings] = useState([]);
@@ -85,7 +89,7 @@ export default function ProfilePage() {
   if (isLoading || !user) {
     return (
       <section className="flex min-h-screen items-center justify-center bg-secondary pt-16">
-        <p className="text-sm text-primary/60">Loading…</p>
+        <p className="text-sm text-primary/60">{t("common.loading")}</p>
       </section>
     );
   }
@@ -96,7 +100,7 @@ export default function ProfilePage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!form.name.trim()) {
-      toast.error("Full name cannot be empty.");
+      toast.error(t("validation.nameEmpty"));
       return;
     }
 
@@ -109,13 +113,13 @@ export default function ProfilePage() {
         avatar: avatarUrl.trim(),
       });
       if (!result.ok) {
-        toast.error(result.error || "Could not update profile. Please try again.");
+        toast.error(errorMessage(t, result, "profile.updateFailed"));
         return;
       }
-      toast.success("Profile updated successfully.");
+      toast.success(t("profile.updated"));
       setEditOpen(false);
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error(t("errors.network"));
     } finally {
       setSaving(false);
     }
@@ -199,7 +203,7 @@ export default function ProfilePage() {
                   )}
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/85 ring-1 ring-white/15">
                     <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                    Member since {formatDate(user.createdAt)}
+                    {t("profile.memberSince", { date: formatDate(user.createdAt) })}
                   </span>
                 </div>
               </div>
@@ -208,7 +212,7 @@ export default function ProfilePage() {
                 className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-primary transition hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
               >
                 <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-                Back to Dashboard
+                {t("profile.backToDashboard")}
               </Link>
             </div>
           </motion.div>
@@ -218,10 +222,10 @@ export default function ProfilePage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-                  Personal Information
+                  {t("profile.personalInfo")}
                 </h2>
                 <p className="mt-0.5 text-sm text-primary/60">
-                  Your basic details used across the academy.
+                  {t("profile.personalInfoHint")}
                 </p>
               </div>
               <button
@@ -230,7 +234,7 @@ export default function ProfilePage() {
                 className={`${styles.btnGhost} inline-flex items-center gap-2`}
               >
                 <Pencil className="h-4 w-4" aria-hidden="true" />
-                {editOpen ? "Cancel" : "Edit Profile"}
+                {editOpen ? t("profile.cancel") : t("profile.editProfile")}
               </button>
             </div>
 
@@ -242,7 +246,7 @@ export default function ProfilePage() {
                       htmlFor="profile-name"
                       className="text-sm font-semibold text-primary"
                     >
-                      Full name
+                      {t("common.fullName")}
                     </label>
                     <input
                       id="profile-name"
@@ -262,7 +266,7 @@ export default function ProfilePage() {
                         htmlFor="profile-country"
                         className="text-sm font-semibold text-primary"
                       >
-                        Country
+                        {t("common.country")}
                       </label>
                       <select
                         id="profile-country"
@@ -285,7 +289,7 @@ export default function ProfilePage() {
                         htmlFor="profile-whatsapp"
                         className="text-sm font-semibold text-primary"
                       >
-                        WhatsApp number
+                        {t("profile.whatsappLabel")}
                       </label>
                       <input
                         id="profile-whatsapp"
@@ -305,7 +309,7 @@ export default function ProfilePage() {
                       htmlFor="profile-avatar"
                       className="text-sm font-semibold text-primary"
                     >
-                      Profile image URL
+                      {t("profile.profileImage")}
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary/50">
@@ -322,8 +326,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <p className="text-xs text-primary/50">
-                      Paste a link to an image (e.g. a Google profile photo).
-                      Leave empty to use your initials.
+                      {t("profile.profileImageHint")}
                     </p>
                   </div>
                 </div>
@@ -334,14 +337,14 @@ export default function ProfilePage() {
                     disabled={saving}
                     className={`${styles.btnPrimary} disabled:cursor-not-allowed disabled:opacity-60`}
                   >
-                    {saving ? "Saving…" : "Save Changes"}
+                    {saving ? t("common.saving") : t("common.save")}
                   </button>
                   <button
                     type="button"
                     onClick={cancelEdit}
                     className={styles.btnGhost}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                 </div>
               </form>
@@ -349,21 +352,21 @@ export default function ProfilePage() {
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {infoItem(
                   <UserRound className="h-5 w-5" />,
-                  "Full name",
+                  t("common.fullName"),
                   user.name
                 )}
-                {infoItem(<Mail className="h-5 w-5" />, "Email", user.email)}
+                {infoItem(<Mail className="h-5 w-5" />, t("common.email"), user.email)}
                 {infoItem(
                   <MapPin className="h-5 w-5" />,
-                  "Country",
+                  t("common.country"),
                   user.country,
-                  "Not set"
+                  t("common.notSet")
                 )}
                 {infoItem(
                   <MessageCircle className="h-5 w-5" />,
-                  "WhatsApp",
+                  t("common.whatsapp"),
                   user.whatsapp,
-                  "Not set"
+                  t("common.notSet")
                 )}
               </div>
             )}
@@ -372,43 +375,43 @@ export default function ProfilePage() {
           {/* Learning information */}
           <motion.div variants={staggerItem} className={`${sectionCard} mt-6`}>
             <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-              Learning Information
+              {t("profile.learningInfo")}
             </h2>
             <p className="mt-0.5 text-sm text-primary/60">
-              Your trial requests and academy progress.
+              {t("profile.learningInfoHint")}
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {infoItem(
                 <BookOpen className="h-5 w-5" />,
-                "Course",
+                t("common.course"),
                 latestBooking ? courseName(latestBooking.course) : "",
-                "Not selected yet"
+                t("profile.notSelectedYet")
               )}
               {infoItem(
                 <GraduationCap className="h-5 w-5" />,
-                "Trial Status",
+                t("profile.trialStatus"),
                 latestBooking
                   ? latestBooking.status.charAt(0).toUpperCase() +
                     latestBooking.status.slice(1)
                   : "",
-                "No trial booked yet"
+                t("profile.noTrialYet")
               )}
               {infoItem(
                 <Calendar className="h-5 w-5" />,
-                "Classes Taken",
+                t("profile.classesTaken"),
                 confirmedCount > 0 ? String(confirmedCount) : "",
-                confirmedCount > 0 ? "" : "No completed classes yet"
+                confirmedCount > 0 ? "" : t("profile.noCompleted")
               )}
               {infoItem(
                 <Calendar className="h-5 w-5" />,
-                "Next Class",
+                t("profile.nextClass"),
                 latestBooking && latestBooking.time
                   ? `${courseName(latestBooking.course)} · ${latestBooking.day || "TBA"} ${
                       latestBooking.time
                     }`
                   : "",
-                "No class scheduled"
+                t("profile.noClassScheduled")
               )}
             </div>
           </motion.div>
@@ -416,50 +419,58 @@ export default function ProfilePage() {
           {/* Account & security */}
           <motion.div variants={staggerItem} className={`${sectionCard} mt-6`}>
             <h2 className="font-hind-siliguri text-lg font-bold text-primary">
-              Account & Security
+              {t("profile.accountSecurity")}
             </h2>
             <p className="mt-0.5 text-sm text-primary/60">
-              Keep your account safe.
+              {t("profile.accountSecurityHint")}
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {infoItem(
                 <Mail className="h-5 w-5" />,
-                "Email",
-                user.email
+                t("common.email"),
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="break-all">{user.email}</span>
+                  <span
+                    className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      user.emailVerified
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {user.emailVerified
+                      ? t("auth.emailVerifiedBadge")
+                      : t("auth.emailUnverifiedBadge")}
+                  </span>
+                </span>
               )}
               {infoItem(
                 <KeyRound className="h-5 w-5" />,
-                "Password",
+                t("auth.password"),
                 "••••••••",
                 ""
               )}
               {infoItem(
                 <ShieldCheck className="h-5 w-5" />,
-                "Session",
-                "Active",
+                t("profile.session"),
+                t("profile.sessionActive"),
                 ""
               )}
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl bg-secondary p-4">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-primary">
-                  Change Password
-                </p>
-                <p className="mt-0.5 text-xs text-primary/60">
-                  Password changes are not available yet.
-                </p>
+            {user.emailVerified === false && (
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
+                <span>{t("auth.verifyBanner")}</span>
+                <Link
+                  href={`/verify-email?email=${encodeURIComponent(user.email)}`}
+                  className="shrink-0 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
+                >
+                  {t("auth.checkEmailResend")}
+                </Link>
               </div>
-              <button
-                type="button"
-                disabled
-                className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-primary/10 px-5 py-2.5 text-sm font-semibold text-primary/50"
-              >
-                <KeyRound className="h-4 w-4" aria-hidden="true" />
-                Coming soon
-              </button>
-            </div>
+            )}
+
+            <ChangePasswordForm />
           </motion.div>
 
           {/* Actions */}
@@ -472,14 +483,14 @@ export default function ProfilePage() {
               className={`${styles.btnAccent} inline-flex items-center gap-2`}
             >
               <BookOpen className="h-4 w-4" aria-hidden="true" />
-              Book a Free Trial
+              {t("profile.bookTrial")}
             </Link>
             <Link
               href="/"
               className={`${styles.btnGhost} inline-flex items-center gap-2`}
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-              Back to Homepage
+              {t("profile.backHome")}
             </Link>
           </motion.div>
         </div>

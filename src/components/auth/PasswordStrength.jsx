@@ -1,13 +1,15 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
+
 import { getPasswordStrength } from "../../lib/passwordStrength";
 
 const STRENGTH_META = {
-  weak: { label: "Weak", bar: "bg-red-400/70", text: "text-red-600", segments: 1 },
-  medium: { label: "Medium", bar: "bg-accent", text: "text-yellow-600", segments: 2 },
-  strong: { label: "Strong", bar: "bg-emerald-500", text: "text-emerald-600", segments: 3 },
+  weak: { labelKey: "auth.strength.weak", bar: "bg-red-400/70", text: "text-red-600", segments: 1 },
+  medium: { labelKey: "auth.strength.medium", bar: "bg-accent", text: "text-yellow-600", segments: 2 },
+  strong: { labelKey: "auth.strength.strong", bar: "bg-emerald-500", text: "text-emerald-600", segments: 3 },
   "very-strong": {
-    label: "Very Strong",
+    labelKey: "auth.strength.veryStrong",
     bar: "bg-emerald-600",
     text: "text-emerald-700",
     segments: 4,
@@ -15,6 +17,7 @@ const STRENGTH_META = {
 };
 
 export function PasswordStrength({ password }) {
+  const { t } = useTranslation();
   const result = getPasswordStrength(password);
   if (!result.label) return null;
 
@@ -22,7 +25,10 @@ export function PasswordStrength({ password }) {
 
   return (
     <div>
-      <div className="mt-1 flex gap-1.5" aria-label={`Password strength: ${meta.label}`}>
+      <div
+        className="mt-1 flex gap-1.5"
+        aria-label={`${t("auth.passwordStrength")} ${t(meta.labelKey)}`}
+      >
         {[1, 2, 3, 4].map((segment) => (
           <span
             key={segment}
@@ -33,7 +39,7 @@ export function PasswordStrength({ password }) {
         ))}
       </div>
       <p className="mt-1.5 text-xs font-semibold text-primary/60">
-        Password strength: <span className={meta.text}>{meta.label}</span>
+        {t("auth.passwordStrength")} <span className={meta.text}>{t(meta.labelKey)}</span>
       </p>
     </div>
   );
