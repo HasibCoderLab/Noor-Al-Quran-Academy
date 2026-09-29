@@ -77,7 +77,7 @@
 ### ✅ Noor AI (Chatbot)
 - Floating dock (Noor AI + WhatsApp + Messenger) — bottom-right, safe-area aware
 - চ্যাট উইন্ডো: quick actions, typing indicator, message bubbles
-- **Dual-mode:** আগে local demo response (`getAIResponse`), তারপর `/api/ai` → Groq (llama-3.3-70b-versatile) কল, সফল হলে AI রেসপন্স রিপ্লেস করে
+- **Dual-mode:** আগে local demo response (`getAIResponse`), তারপর `/api/ai` → Groq (qwen/qwen3.8-27b) কল, সফল হলে AI রেসপন্স রিপ্লেস করে
 - System prompt-এ পুরো অ্যাকাডেমির ফ্যাক্ট ইনজেক্ট করা
 - Fallback: API fail করলে local demo assistant
 - Escape key দিয়ে ক্লোজ, attach-file বাটন disabled ("coming soon")

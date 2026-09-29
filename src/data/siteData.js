@@ -16,7 +16,7 @@ export const SITE = {
     process.env.NEXT_PUBLIC_FACEBOOK_URL ||
     "https://facebook.com/nooralquranacademy",
   messenger: process.env.NEXT_PUBLIC_MESSENGER_URL || "https://m.me/nooralquranacademy",
-  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "https://wa.me/8801XXXXXXXXX",
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || "https://wa.me/8801872016268",
   targetCountries: ["Italy", "USA", "UK", "Saudi Arabia", "Bangladesh"],
   subjects: ["tajweed", "hifz", "nazra", "dua"],
   classTimes: {
@@ -255,6 +255,6 @@ export const FOOTER_LINKS = {
   contact: [
     { label: "Chapai Nawabganj, Bangladesh", href: null },
     { label: "contact@nooralquran.com", href: "mailto:contact@nooralquran.com" },
-    { label: "WhatsApp", href: "https://wa.me/8801XXXXXXXXX" },
+    { label: "WhatsApp", href: "https://wa.me/8801872016268" },
   ],
 };

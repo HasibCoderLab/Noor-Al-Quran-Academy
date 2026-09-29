@@ -142,7 +142,7 @@ export async function POST(request) {
     );
   }
 
-  const model = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const model = process.env.GROQ_MODEL || "qwen/qwen3.8-27b";
 
   try {
     const response = await fetch(groqEndpoint(), {
