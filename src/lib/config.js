@@ -4,10 +4,39 @@ const REQUIRED_ENV = ["MONGODB_URI", "JWT_SECRET"];
 
 const PLACEHOLDER_RE = /X{3,}|your_|yourdomain|changeme|placeholder/i;
 
+const TRUTHY_VALUES = new Set(["1", "true", "yes", "on"]);
+const FALSY_VALUES = new Set(["0", "false", "no", "off"]);
+
 export function smtpConfigured() {
   return Boolean(
     process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
   );
+}
+
+function readEmailVerificationFlag() {
+  const raw = (process.env.EMAIL_VERIFICATION_REQUIRED || "")
+    .trim()
+    .toLowerCase();
+  if (TRUTHY_VALUES.has(raw)) return "true";
+  if (!raw || FALSY_VALUES.has(raw)) return "false";
+  return "invalid";
+}
+
+/**
+ * Feature flag for the email verification requirement.
+ *
+ * Temporarily OFF (the default) so that students can register and log in
+ * without a confirmed address while the sending domain is still unverified
+ * in the mail provider. Every piece of the verification system — the
+ * /verify-email page, /api/auth/verify-email, /api/auth/resend-verification,
+ * the mailer, the templates, the token hashing/expiry — stays in place and is
+ * switched back on by setting EMAIL_VERIFICATION_REQUIRED=true.
+ *
+ * Server-side only: the value is read from process.env at call time and is
+ * never sent to the browser.
+ */
+export function emailVerificationRequired() {
+  return readEmailVerificationFlag() === "true";
 }
 
 export function envReport() {
@@ -23,9 +52,25 @@ export function envReport() {
     ),
     email: smtpConfigured(),
     siteUrl: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+    emailVerification: emailVerificationRequired(),
   };
 
   const warnings = [];
+
+  const emailVerificationFlag = readEmailVerificationFlag();
+  if (emailVerificationFlag === "invalid") {
+    warnings.push(
+      "EMAIL_VERIFICATION_REQUIRED is set to an unrecognised value — email verification stays disabled (use true or false)"
+    );
+  } else if (!features.emailVerification) {
+    warnings.push(
+      "Email verification is temporarily disabled — new accounts can log in without confirming their address (set EMAIL_VERIFICATION_REQUIRED=true to restore it)"
+    );
+  } else if (!features.email) {
+    warnings.push(
+      "EMAIL_VERIFICATION_REQUIRED is on but SMTP is not configured — verification emails cannot be delivered"
+    );
+  }
 
   const smtpTouched = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS"].some(
     (key) => process.env[key]

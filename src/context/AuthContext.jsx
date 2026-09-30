@@ -44,9 +44,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const register = useCallback(async (payload) => {
-    const result = await auth.register(payload);
-    if (result.ok && result.user && !result.requiresVerification) setUser(result.user);
-    return result;
+    // Registration never establishes a session (the account has to be logged
+    // into explicitly), so the auth context is left untouched here.
+    return auth.register(payload);
   }, []);
 
   const logout = useCallback(async () => {

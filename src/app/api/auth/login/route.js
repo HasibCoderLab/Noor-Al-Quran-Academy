@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "../../../../lib/db";
 import User from "../../../../models/User";
 import { setAuthCookie, signToken, toPublicUser } from "../../../../lib/jwt";
+import { emailVerificationRequired } from "../../../../lib/config";
 import { rateLimit, clientIp, rateLimitedResponse } from "../../../../lib/rateLimit";
 
 const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.]+$/;
@@ -54,7 +55,7 @@ export async function POST(request) {
       );
     }
 
-    if (user.emailVerified === false) {
+    if (emailVerificationRequired() && user.emailVerified === false) {
       return NextResponse.json(
         {
           error: "Please confirm your email address before logging in.",

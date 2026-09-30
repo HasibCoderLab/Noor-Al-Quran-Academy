@@ -17,6 +17,7 @@ const FEATURE_LABELS = {
   payments: "Stripe payments",
   email: "SMTP email",
   siteUrl: "Public site URL",
+  emailVerification: "Email verification required",
 };
 
 async function main() {

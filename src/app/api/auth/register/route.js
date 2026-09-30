@@ -6,6 +6,7 @@ import { toPublicUser } from "../../../../lib/jwt";
 import { generateToken } from "../../../../lib/tokens";
 import { sendMail, isEmailConfigured } from "../../../../lib/mailer";
 import { verificationEmail } from "../../../../lib/emailTemplates";
+import { emailVerificationRequired } from "../../../../lib/config";
 import { rateLimit, clientIp, rateLimitedResponse } from "../../../../lib/rateLimit";
 
 const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.]+$/;
@@ -60,6 +61,8 @@ export async function POST(request) {
 
     await connectDB();
 
+    const requiresVerification = emailVerificationRequired();
+
     const existing = await User.findOne({ email });
     if (existing) {
       return NextResponse.json(
@@ -75,9 +78,11 @@ export async function POST(request) {
       password,
       country,
       whatsapp,
-      emailVerified: false,
-      emailVerifyTokenHash: hash,
-      emailVerifyExpires: new Date(Date.now() + EMAIL_TTL_MS),
+      emailVerified: !requiresVerification,
+      emailVerifyTokenHash: requiresVerification ? hash : undefined,
+      emailVerifyExpires: requiresVerification
+        ? new Date(Date.now() + EMAIL_TTL_MS)
+        : undefined,
     });
 
     const verifyUrl = `${siteUrl(request)}/verify-email?token=${encodeURIComponent(
@@ -85,20 +90,27 @@ export async function POST(request) {
     )}&email=${encodeURIComponent(email)}`;
 
     let emailSent = false;
-    try {
-      const { subject, text, html } = verificationEmail({ name, url: verifyUrl });
-      const result = await sendMail({ to: email, subject, text, html });
-      emailSent = result.delivered;
-    } catch (error) {
-      console.error("[Auth] Verification email failed:", error);
+    if (requiresVerification) {
+      try {
+        const { subject, text, html } = verificationEmail({ name, url: verifyUrl });
+        const result = await sendMail({ to: email, subject, text, html });
+        emailSent = result.delivered;
+      } catch (error) {
+        console.error("[Auth] Verification email failed:", error);
+      }
     }
 
     const payload = {
       user: toPublicUser(user),
-      requiresVerification: true,
+      requiresVerification,
       emailSent,
     };
-    if (!emailSent && !isEmailConfigured() && process.env.NODE_ENV !== "production") {
+    if (
+      requiresVerification &&
+      !emailSent &&
+      !isEmailConfigured() &&
+      process.env.NODE_ENV !== "production"
+    ) {
       payload.devVerificationUrl = verifyUrl;
     }
 

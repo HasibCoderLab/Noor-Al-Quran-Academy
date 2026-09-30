@@ -69,7 +69,7 @@ export default function RegisterPage() {
       if (response.requiresVerification) {
         router.push(`/verify-email?email=${encodeURIComponent(response.user.email)}`);
       } else {
-        router.push("/dashboard");
+        router.push("/login");
       }
     } catch {
       toast.error(t("errors.network"));

@@ -7,6 +7,30 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## EMAIL VERIFICATION (TEMPORARY FLAG)
+
+Source of truth: `emailVerificationRequired()` in `src/lib/config.js`
+Env var: `EMAIL_VERIFICATION_REQUIRED` (server-side only, never exposed to the browser)
+
+  true / yes / on / 1  → registration requires a confirmed address again
+  unset / false / no / off / 0 / anything else → verification not required (current state)
+
+Why: the mail provider cannot send to arbitrary addresses until the sending
+domain is verified, so new students were being locked out of login.
+
+Current behaviour while disabled:
+  - /api/auth/login no longer returns 403 EMAIL_NOT_VERIFIED (branch kept, flag-gated)
+  - /api/auth/register returns `requiresVerification: false` and skips the
+    verification token + email, so no account is created in an unverified state
+  - /verify-email, /api/auth/verify-email, /api/auth/resend-verification, the
+    centralized mailer, the email templates and the token hashing/expiry are
+    all untouched and still reachable
+
+To re-enable: verify the sending domain in the mail provider, then set
+`EMAIL_VERIFICATION_REQUIRED=true` in the deployment env. Nothing else changes.
+`pnpm doctor` and `/api/health` report the flag state and warn when it is off.
+
 ## I18N (Language System)
 
 Library: react-i18next
