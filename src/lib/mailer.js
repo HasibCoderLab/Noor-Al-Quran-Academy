@@ -1,31 +1,68 @@
 import nodemailer from "nodemailer";
 
+import { smtpConfigured } from "./config.js";
+
+let transporter = null;
+let transporterKey = null;
+
 export function isEmailConfigured() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER);
+  return smtpConfigured();
 }
 
-export async function sendMail({ to, subject, html, text }) {
-  if (!isEmailConfigured()) {
-    console.log(
-      `[mail:dev] (SMTP not configured — logging instead)\n  To: ${to}\n  Subject: ${subject}\n  ${String(
-        text || ""
-      ).replace(/\n/g, "\n  ")}`
-    );
-    return { delivered: false, dev: true };
-  }
+function smtpFrom() {
+  return process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER;
+}
 
-  const transporter = nodemailer.createTransport({
+function smtpOptions() {
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secureOverride = process.env.SMTP_SECURE;
+  const secure =
+    secureOverride === "true" || secureOverride === "false"
+      ? secureOverride === "true"
+      : port === 465;
+
+  return {
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === "true",
+    port,
+    secure,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-  });
+  };
+}
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+function getTransporter() {
+  const options = smtpOptions();
+  const key = `${options.host}|${options.port}|${options.secure}|${options.auth.user}`;
+  if (!transporter || key !== transporterKey) {
+    transporter = nodemailer.createTransport(options);
+    transporterKey = key;
+  }
+  return transporter;
+}
+
+function devLog({ to, subject, text }) {
+  const redacted = String(text || "").replace(
+    /(token=)[^&\s]+/g,
+    "$1[redacted]"
+  );
+  console.log(
+    `[mail:dev] (SMTP not configured — logging instead)\n  To: ${to}\n  Subject: ${subject}\n  ${redacted.replace(
+      /\n/g,
+      "\n  "
+    )}`
+  );
+}
+
+export async function sendMail({ to, subject, html, text }) {
+  if (!isEmailConfigured()) {
+    devLog({ to, subject, text });
+    return { delivered: false, dev: true };
+  }
+
+  await getTransporter().sendMail({
+    from: smtpFrom(),
     to,
     subject,
     html,

@@ -8,7 +8,12 @@ const TOUCHED = [
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "SMTP_HOST",
+  "SMTP_PORT",
   "SMTP_USER",
+  "SMTP_PASS",
+  "SMTP_FROM",
+  "SMTP_SECURE",
+  "EMAIL_FROM",
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_WHATSAPP",
   "NEXT_PUBLIC_CONTACT_EMAIL",
@@ -54,6 +59,7 @@ describe("envReport", () => {
     process.env.STRIPE_WEBHOOK_SECRET = "whsec_test";
     process.env.SMTP_HOST = "smtp.example.com";
     process.env.SMTP_USER = "user@example.com";
+    process.env.SMTP_PASS = "secret";
     process.env.NEXT_PUBLIC_SITE_URL = "https://example.com";
 
     const { features } = envReport();
@@ -104,6 +110,56 @@ describe("envReport", () => {
   it("warns when Stripe is not configured", () => {
     const { warnings } = envReport();
     expect(warnings.some((w) => w.includes("Stripe"))).toBe(true);
+  });
+
+  it("flags partial SMTP configuration as not ready", () => {
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_USER = "user@example.com";
+
+    const report = envReport();
+    expect(report.features.email).toBe(false);
+    expect(
+      report.warnings.some(
+        (w) => w.includes("SMTP") && w.includes("partially")
+      )
+    ).toBe(true);
+  });
+
+  it("warns when SMTP_FROM is missing", () => {
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_USER = "user@example.com";
+    process.env.SMTP_PASS = "secret";
+
+    const report = envReport();
+    expect(report.features.email).toBe(true);
+    expect(report.warnings.some((w) => w.includes("SMTP_FROM"))).toBe(true);
+  });
+
+  it("does not warn about SMTP_FROM when EMAIL_FROM legacy fallback is set", () => {
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_USER = "user@example.com";
+    process.env.SMTP_PASS = "secret";
+    process.env.EMAIL_FROM = "Noor <no-reply@example.com>";
+
+    const report = envReport();
+    expect(report.warnings.some((w) => w.includes("SMTP_FROM"))).toBe(false);
+  });
+
+  it("never exposes SMTP secrets in the report", () => {
+    process.env.SMTP_HOST = "smtp.example.com";
+    process.env.SMTP_USER = "user@example.com";
+    process.env.SMTP_PASS = "super-secret-pass";
+    process.env.SMTP_FROM = "Noor <no-reply@example.com>";
+
+    const serialized = JSON.stringify(envReport());
+    expect(serialized).not.toContain("super-secret-pass");
+    expect(serialized).not.toContain("SMTP_PASS");
+  });
+
+  it("warns when NEXT_PUBLIC_SITE_URL points at localhost", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
+    const { warnings } = envReport();
+    expect(warnings.some((w) => w.includes("localhost"))).toBe(true);
   });
 });
 
