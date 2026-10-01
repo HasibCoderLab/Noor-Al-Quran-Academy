@@ -431,6 +431,7 @@ export default function ProfilePage() {
                 t("common.email"),
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="break-all">{user.email}</span>
+                  {/* Email verification badge hidden per request
                   <span
                     className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                       user.emailVerified
@@ -442,6 +443,7 @@ export default function ProfilePage() {
                       ? t("auth.emailVerifiedBadge")
                       : t("auth.emailUnverifiedBadge")}
                   </span>
+                  */}
                 </span>
               )}
               {infoItem(
@@ -458,6 +460,8 @@ export default function ProfilePage() {
               )}
             </div>
 
+
+            {/* Email verification banner hidden per request
             {user.emailVerified === false && (
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-800">
                 <span>{t("auth.verifyBanner")}</span>
@@ -469,7 +473,7 @@ export default function ProfilePage() {
                 </Link>
               </div>
             )}
-
+            */}
             <ChangePasswordForm />
           </motion.div>
 
