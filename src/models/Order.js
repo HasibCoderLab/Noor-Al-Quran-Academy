@@ -21,8 +21,10 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
     stripeSessionId: { type: String, default: null },
+    stripePaymentIntentId: { type: String, default: null },
     stripeEventId: { type: String, default: null },
     paidAt: { type: Date, default: null },
+    refundedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -30,6 +32,11 @@ const orderSchema = new mongoose.Schema(
 orderSchema.index(
   { stripeSessionId: 1 },
   { unique: true, partialFilterExpression: { stripeSessionId: { $type: "string" } } }
+);
+
+orderSchema.index(
+  { stripePaymentIntentId: 1 },
+  { partialFilterExpression: { stripePaymentIntentId: { $type: "string" } } }
 );
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

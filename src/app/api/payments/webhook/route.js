@@ -12,10 +12,12 @@ const PAID_EVENTS = new Set([
 ]);
 const FAILED_EVENTS = new Set(["checkout.session.async_payment_failed"]);
 const EXPIRED_EVENTS = new Set(["checkout.session.expired"]);
+const REFUNDED_EVENTS = new Set(["charge.refunded"]);
 const HANDLED_EVENTS = new Set([
   ...PAID_EVENTS,
   ...FAILED_EVENTS,
   ...EXPIRED_EVENTS,
+  ...REFUNDED_EVENTS,
 ]);
 
 // Status an order may hold before a given webhook transition is allowed. The
@@ -24,6 +26,7 @@ const HANDLED_EVENTS = new Set([
 const PAID_FROM = ["pending", "expired"];
 const EXPIRED_FROM = ["pending"];
 const FAILED_FROM = ["pending"];
+const REFUNDED_FROM = ["paid"];
 
 function acknowledge(body) {
   return NextResponse.json({ received: true, ...body });
@@ -83,6 +86,38 @@ export async function POST(request) {
 
   try {
     await connectDB();
+
+    // Refunds arrive as charge events (the object is a Charge, not a session).
+    // A charge only maps back to our order through the PaymentIntent id that we
+    // persisted on the paid transition, so resolve it that way — never by a
+    // client-supplied value.
+    if (REFUNDED_EVENTS.has(event.type)) {
+      const charge = event.data.object;
+      const paymentIntent = charge?.payment_intent;
+
+      // Only a fully refunded charge flips the order; partial refunds stay paid.
+      if (charge?.refunded !== true || !paymentIntent) {
+        return acknowledge({ ignored: true });
+      }
+
+      const order = await Order.findOne({
+        stripePaymentIntentId: String(paymentIntent),
+      });
+      if (!order) {
+        console.warn("[Payments] Refund for unknown payment intent:", paymentIntent);
+        return acknowledge({ ignored: true });
+      }
+
+      const refunded = await transitionOrder(
+        order._id,
+        REFUNDED_FROM,
+        "refunded",
+        event.id,
+        { refundedAt: new Date() }
+      );
+      // A duplicate delivery finds the order already refunded.
+      return acknowledge({ refunded: Boolean(refunded) });
+    }
 
     const session = event.data.object;
     let order = null;
@@ -153,7 +188,14 @@ export async function POST(request) {
       PAID_FROM,
       "paid",
       event.id,
-      { paidAt: new Date() }
+      {
+        paidAt: new Date(),
+        // Persist the PaymentIntent so a later refund can be linked back to
+        // this order without trusting anything from the client.
+        stripePaymentIntentId: session.payment_intent
+          ? String(session.payment_intent)
+          : null,
+      }
     );
     if (!paid) {
       // Already paid by an earlier (possibly concurrent) delivery.

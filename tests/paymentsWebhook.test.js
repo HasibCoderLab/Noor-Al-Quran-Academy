@@ -194,6 +194,68 @@ describe("POST /api/payments/webhook — paid transitions", () => {
     const result = await deliver("checkout.session.async_payment_succeeded");
     expect(result.body.paid).toBe(true);
   });
+
+  it("persists the payment intent id so a later refund can be linked", async () => {
+    mocks.findById.mockResolvedValue({ ...ORDER });
+    mocks.findOneAndUpdate.mockResolvedValue({ ...ORDER, status: "paid" });
+
+    await deliver("checkout.session.completed", { payment_intent: "pi_123" });
+
+    const update = mocks.findOneAndUpdate.mock.calls[0][1];
+    expect(update.$set.stripePaymentIntentId).toBe("pi_123");
+  });
+});
+
+describe("POST /api/payments/webhook — refunds", () => {
+  it("marks a paid order refunded atomically by payment intent", async () => {
+    mocks.findOne.mockResolvedValue({ ...ORDER, status: "paid", stripePaymentIntentId: "pi_1" });
+    mocks.findOneAndUpdate.mockResolvedValue({ ...ORDER, status: "refunded" });
+
+    const result = await deliver("charge.refunded", {
+      payment_intent: "pi_1",
+      refunded: true,
+    });
+
+    expect(result.body.refunded).toBe(true);
+    expect(mocks.findOne).toHaveBeenCalledWith({ stripePaymentIntentId: "pi_1" });
+    const [filter, update] = mocks.findOneAndUpdate.mock.calls[0];
+    expect(filter).toEqual({ _id: "order-1", status: { $in: ["paid"] } });
+    expect(update.$set.status).toBe("refunded");
+    expect(update.$set.refundedAt).toBeInstanceOf(Date);
+  });
+
+  it("is idempotent — a duplicate refund does not re-transition", async () => {
+    mocks.findOne.mockResolvedValue({ ...ORDER, status: "refunded", stripePaymentIntentId: "pi_1" });
+    mocks.findOneAndUpdate.mockResolvedValue(null);
+
+    const result = await deliver("charge.refunded", {
+      payment_intent: "pi_1",
+      refunded: true,
+    });
+
+    expect(result.body.refunded).toBe(false);
+  });
+
+  it("ignores a partial refund so the order stays paid", async () => {
+    const result = await deliver("charge.refunded", {
+      payment_intent: "pi_1",
+      refunded: false,
+    });
+    expect(result.body.ignored).toBe(true);
+    expect(mocks.findOne).not.toHaveBeenCalled();
+    expect(mocks.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it("ignores a refund that matches no known payment intent", async () => {
+    mocks.findOne.mockResolvedValue(null);
+
+    const result = await deliver("charge.refunded", {
+      payment_intent: "pi_unknown",
+      refunded: true,
+    });
+    expect(result.body.ignored).toBe(true);
+    expect(mocks.findOneAndUpdate).not.toHaveBeenCalled();
+  });
 });
 
 describe("POST /api/payments/webhook — expiry and failure", () => {
