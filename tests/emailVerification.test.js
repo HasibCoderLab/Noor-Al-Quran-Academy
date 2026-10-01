@@ -46,6 +46,15 @@ vi.mock("../src/models/User.js", () => ({
   default: { findOne: mocks.findOne, create: mocks.create },
 }));
 
+vi.mock("../src/lib/tokens.js", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    tokensMatch: actual.tokensMatch,
+    isExpired: actual.isExpired,
+  };
+});
+
 const FLAG = "EMAIL_VERIFICATION_REQUIRED";
 let flagSnapshot;
 let ipCounter = 0;
@@ -482,5 +491,189 @@ describe("verification surface stays intact", () => {
       expect(source).not.toContain("EMAIL_VERIFICATION_REQUIRED");
       expect(source).not.toMatch(/lib\/config/);
     }
+  });
+});
+
+describe("full email verification flow", () => {
+  const REGISTRATION = {
+    name: "Flow Student",
+    email: "flow@academy.test",
+    password: "CorrectHorse1",
+  };
+
+  function mockUserWithTokens(overrides = {}) {
+    const user = {
+      _id: "flow-user",
+      name: REGISTRATION.name,
+      email: REGISTRATION.email,
+      role: "student",
+      emailVerified: false,
+      tokenVersion: 0,
+      emailVerifyTokenHash: "verify-hash",
+      emailVerifyExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      passwordResetTokenHash: "reset-hash",
+      passwordResetExpires: new Date(Date.now() + 30 * 60 * 1000),
+      save: async function () {},
+      ...overrides,
+    };
+    return user;
+  }
+
+  it("register → verify → login succeeds", async () => {
+    process.env[FLAG] = "true";
+
+    const registerResponse = await registerPost(makeRequest(REGISTRATION));
+    expect(registerResponse.status).toBe(201);
+    expect(registerResponse.body.requiresVerification).toBe(true);
+    expect(registerResponse.body.emailSent).toBe(true);
+
+    const emailHtml = mocks.sendMail.mock.calls[0][0].html;
+    const tokenMatch = emailHtml.match(/token=([^&"]+)/);
+    const emailMatch = emailHtml.match(/email=([^&"]+)/);
+    expect(tokenMatch).toBeTruthy();
+    expect(emailMatch).toBeTruthy();
+
+    const user = mockUserWithTokens();
+    mocks.findOne.mockReturnValue({
+      select: () => Promise.resolve(user),
+    });
+
+    const tokensModule = await import("../src/lib/tokens.js");
+    const originalMatch = tokensModule.tokensMatch;
+    const originalExpired = tokensModule.isExpired;
+    tokensModule.tokensMatch = () => true;
+    tokensModule.isExpired = () => false;
+
+    try {
+      const verifyPost = (await import("../src/app/api/auth/verify-email/route.js")).POST;
+      const verifyResponse = await verifyPost(
+        makeRequest({
+          token: decodeURIComponent(tokenMatch[1]),
+          email: decodeURIComponent(emailMatch[1]),
+        })
+      );
+      expect(verifyResponse.status).toBe(200);
+    } finally {
+      tokensModule.tokensMatch = originalMatch;
+      tokensModule.isExpired = originalExpired;
+    }
+
+    const loginResponse = await postLogin(() =>
+      userDoc({ email: REGISTRATION.email, emailVerified: true })
+    );
+    expect(loginResponse.status).toBe(200);
+  });
+
+  it("register → verify → login with old token fails", async () => {
+    process.env[FLAG] = "true";
+
+    await registerPost(makeRequest(REGISTRATION));
+
+    const emailHtml = mocks.sendMail.mock.calls[0][0].html;
+    const tokenMatch = emailHtml.match(/token=([^&"]+)/);
+    const emailMatch = emailHtml.match(/email=([^&"]+)/);
+
+    const user = mockUserWithTokens();
+    mocks.findOne.mockReturnValue({
+      select: () => Promise.resolve(user),
+    });
+
+    const tokensModule = await import("../src/lib/tokens.js");
+    const originalMatch = tokensModule.tokensMatch;
+    const originalExpired = tokensModule.isExpired;
+    tokensModule.tokensMatch = () => true;
+    tokensModule.isExpired = () => false;
+
+    try {
+      const verifyPost = (await import("../src/app/api/auth/verify-email/route.js")).POST;
+      const firstVerify = await verifyPost(
+        makeRequest({
+          token: decodeURIComponent(tokenMatch[1]),
+          email: decodeURIComponent(emailMatch[1]),
+        })
+      );
+      expect(firstVerify.status).toBe(200);
+    } finally {
+      tokensModule.tokensMatch = originalMatch;
+      tokensModule.isExpired = originalExpired;
+    }
+
+    const clearedUser = mockUserWithTokens({
+      emailVerifyTokenHash: undefined,
+      emailVerifyExpires: undefined,
+    });
+    mocks.findOne.mockReturnValue({
+      select: () => Promise.resolve(clearedUser),
+    });
+
+    const verifyPost = (await import("../src/app/api/auth/verify-email/route.js")).POST;
+    const secondVerify = await verifyPost(
+      makeRequest({
+        token: decodeURIComponent(tokenMatch[1]),
+        email: decodeURIComponent(emailMatch[1]),
+      })
+    );
+    expect(secondVerify.status).toBe(400);
+    expect(secondVerify.body.code).toBe("INVALID_TOKEN");
+  });
+
+  it("forgot password → reset → login succeeds", async () => {
+    process.env[FLAG] = "true";
+
+    const user = mockUserWithTokens();
+    mocks.findOne.mockResolvedValue(user);
+
+    const forgotPost = (await import("../src/app/api/auth/forgot-password/route.js")).POST;
+    const forgotResponse = await forgotPost(
+      makeRequest({ email: REGISTRATION.email })
+    );
+    expect(forgotResponse.status).toBe(200);
+    expect(forgotResponse.body.ok).toBe(true);
+
+    const emailHtml = mocks.sendMail.mock.calls[0][0].html;
+    const tokenMatch = emailHtml.match(/token=([^&"]+)/);
+    const emailMatch = emailHtml.match(/email=([^&"]+)/);
+    expect(tokenMatch).toBeTruthy();
+    expect(emailMatch).toBeTruthy();
+
+    const resetUser = mockUserWithTokens();
+    mocks.findOne.mockReturnValue({
+      select: () => Promise.resolve(resetUser),
+    });
+
+    const tokensModule = await import("../src/lib/tokens.js");
+    const originalMatch = tokensModule.tokensMatch;
+    const originalExpired = tokensModule.isExpired;
+    tokensModule.tokensMatch = () => true;
+    tokensModule.isExpired = () => false;
+
+    try {
+      const resetPost = (await import("../src/app/api/auth/reset-password/route.js")).POST;
+      const resetResponse = await resetPost(
+        makeRequest({
+          token: decodeURIComponent(tokenMatch[1]),
+          email: decodeURIComponent(emailMatch[1]),
+          password: "NewPassword123",
+        })
+      );
+      expect(resetResponse.status).toBe(200);
+      expect(resetResponse.body.ok).toBe(true);
+    } finally {
+      tokensModule.tokensMatch = originalMatch;
+      tokensModule.isExpired = originalExpired;
+    }
+  });
+
+  it("forgot password always returns ok for non-existing email", async () => {
+    mocks.findOne.mockResolvedValue(null);
+
+    const forgotPost = (await import("../src/app/api/auth/forgot-password/route.js")).POST;
+    const response = await forgotPost(
+      makeRequest({ email: "nonexistent@academy.test" })
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body.ok).toBe(true);
+    expect(mocks.sendMail).not.toHaveBeenCalled();
   });
 });

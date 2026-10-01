@@ -9,6 +9,30 @@ export function isEmailConfigured() {
   return smtpConfigured();
 }
 
+export function validateSmtpConfig() {
+  const errors = [];
+
+  if (!process.env.SMTP_HOST) {
+    errors.push("SMTP_HOST is required");
+  }
+  if (!process.env.SMTP_USER) {
+    errors.push("SMTP_USER is required");
+  }
+  if (!process.env.SMTP_PASS) {
+    errors.push("SMTP_PASS is required");
+  }
+
+  const port = Number(process.env.SMTP_PORT || 587);
+  if (Number.isNaN(port) || port < 1 || port > 65535) {
+    errors.push("SMTP_PORT must be a valid port number");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}
+
 function smtpFrom() {
   return process.env.SMTP_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER;
 }
