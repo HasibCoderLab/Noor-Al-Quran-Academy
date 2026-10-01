@@ -37,6 +37,22 @@ const bookingSchema = new mongoose.Schema(
       enum: ["pending", "confirmed", "completed", "cancelled"],
       default: "pending",
     },
+    // Payment lifecycle for paid (subscription) bookings. Free-trial bookings
+    // keep the default and never carry an order.
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "pending", "paid", "failed", "refunded"],
+      default: "unpaid",
+      index: true,
+    },
+    planName: { type: String, trim: true },
+    region: { type: String, enum: ["bd", "intl"], default: null },
+    order: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+      index: true,
+    },
     adminNotes: { type: String, trim: true },
   },
   { timestamps: true }

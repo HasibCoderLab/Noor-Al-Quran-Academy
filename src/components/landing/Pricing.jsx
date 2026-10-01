@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
 import SectionWrapper from "../ui/SectionWrapper";
@@ -12,14 +11,12 @@ import { PRICING } from "../../data/siteData";
 import { styles } from "../../styles/commonStyles";
 import { fadeIn } from "../../lib/animations";
 import { useAuth } from "../../context/AuthContext";
-import { errorMessage } from "../../lib/apiError";
 
 export default function Pricing() {
   const { t } = useTranslation();
   const router = useRouter();
   const { user } = useAuth();
   const [region, setRegion] = useState("intl");
-  const [paying, setPaying] = useState(false);
 
   useEffect(() => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -29,32 +26,15 @@ export default function Pricing() {
   const data = PRICING[region];
   const isBD = region === "bd";
 
-  const startCheckout = async (planIndex) => {
-    if (paying) return;
+  const startCheckout = (planIndex) => {
     if (!user) {
       router.push(`/login?from=${encodeURIComponent("/#pricing")}`);
       return;
     }
 
-    setPaying(true);
-    try {
-      const response = await fetch("/api/payments/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ region, planIndex }),
-      });
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok || !result.url) {
-        toast.error(errorMessage(t, result, "errors.generic"));
-        return;
-      }
-
-      window.location.href = result.url;
-    } catch {
-      toast.error(t("errors.network"));
-      setPaying(false);
-    }
+    // Slot + course are chosen (and validated) on the checkout page, where the
+    // payment is bound to a specific booking.
+    router.push(`/checkout?region=${region}&plan=${planIndex}`);
   };
 
   return (
@@ -179,12 +159,11 @@ export default function Pricing() {
                     <button
                       type="button"
                       onClick={() => startCheckout(planIndex)}
-                      disabled={paying}
-                      className={`w-full disabled:cursor-not-allowed disabled:opacity-70 ${
+                      className={`w-full ${
                         isPopular ? styles.btnAccent : styles.btnPrimary
                       }`}
                     >
-                      {paying ? t("common.redirecting") : t("landing.pricing.choose")}
+                      {t("landing.pricing.choose")}
                     </button>
                     <Link
                       href="/free-trial"

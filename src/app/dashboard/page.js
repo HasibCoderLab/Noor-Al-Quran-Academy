@@ -498,6 +498,21 @@ export default function DashboardPage() {
                         <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold text-primary capitalize">
                           {t("booking.status." + booking.status)}
                         </span>
+                        {booking.paymentStatus &&
+                        booking.paymentStatus !== "unpaid" ? (
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
+                              booking.paymentStatus === "paid"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : booking.paymentStatus === "failed"
+                                  ? "bg-red-100 text-red-600"
+                                  : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {t("booking.paymentLabel")}:{" "}
+                            {t(`payment.status.${booking.paymentStatus}`)}
+                          </span>
+                        ) : null}
                       </div>
                       <p className="mt-1 text-sm text-primary/60">
                         {booking.name} · {booking.whatsapp} · {booking.duration} min

@@ -43,6 +43,8 @@ describe("toPublicBooking", () => {
         "time",
         "duration",
         "status",
+        "paymentStatus",
+        "planName",
         "name",
         "email",
         "country",
@@ -51,6 +53,7 @@ describe("toPublicBooking", () => {
         "createdAt",
       ].sort()
     );
+    expect(result.paymentStatus).toBe("unpaid");
     expect(result.id).toBe("64b000000000000000000001");
     expect(JSON.stringify(result)).not.toContain("adminNotes");
     expect(JSON.stringify(result)).not.toContain("__v");
@@ -137,11 +140,13 @@ describe("orders", () => {
         "amount",
         "currency",
         "status",
+        "bookingId",
         "stripeSessionId",
         "paidAt",
         "createdAt",
       ].sort()
     );
+    expect(result.bookingId).toBe("");
     const json = JSON.stringify(result);
     expect(json).not.toContain("buyer@x.com");
     expect(json).not.toContain("evt_123");

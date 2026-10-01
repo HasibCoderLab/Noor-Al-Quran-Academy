@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "../../../../lib/db";
 import { getStripe } from "../../../../lib/stripe";
 import Order from "../../../../models/Order";
+import Booking from "../../../../models/Booking";
+import Availability from "../../../../models/Availability";
 
 // Events that can move an order into a terminal state. Anything else is
 // acknowledged with 200 so Stripe stops retrying it.
@@ -46,6 +48,41 @@ async function transitionOrder(orderId, from, status, eventId, extra = {}) {
     { _id: orderId, status: { $in: from } },
     { $set: { status, stripeEventId: eventId, ...extra } },
     { new: true }
+  );
+}
+
+// Booking reconciliation is a conditional write keyed on the current payment
+// status, so repeated webhook deliveries are no-ops rather than double-applies.
+async function markBookingPaid(order) {
+  if (!order?.booking) return;
+  await Booking.updateOne(
+    { _id: order.booking, paymentStatus: { $in: ["pending", "unpaid", "failed"] } },
+    { $set: { paymentStatus: "paid" } }
+  );
+}
+
+// A failed or expired payment cancels the linked booking and releases its slot.
+async function failBooking(order, paymentStatus) {
+  if (!order?.booking) return;
+  const result = await Booking.updateOne(
+    { _id: order.booking, paymentStatus: { $in: ["pending", "unpaid"] } },
+    { $set: { paymentStatus, status: "cancelled" } }
+  );
+  if (result.modifiedCount > 0) {
+    await Availability.updateOne(
+      { booking: order.booking, status: "booked" },
+      { $set: { status: "available", booking: null } }
+    );
+  }
+}
+
+// Refunds only flip the payment status; a confirmed/completed class history is
+// left intact for the admin to handle.
+async function markBookingRefunded(order) {
+  if (!order?.booking) return;
+  await Booking.updateOne(
+    { _id: order.booking, paymentStatus: "paid" },
+    { $set: { paymentStatus: "refunded" } }
   );
 }
 
@@ -115,7 +152,9 @@ export async function POST(request) {
         event.id,
         { refundedAt: new Date() }
       );
-      // A duplicate delivery finds the order already refunded.
+      // Reconcile even on a duplicate delivery, so a booking always ends up
+      // consistent with the order no matter which delivery did the transition.
+      await markBookingRefunded(order);
       return acknowledge({ refunded: Boolean(refunded) });
     }
 
@@ -141,6 +180,8 @@ export async function POST(request) {
         "expired",
         event.id
       );
+      // An abandoned/failed payment must release the held slot.
+      await failBooking(order, "failed");
       return acknowledge({ expired: Boolean(expired) });
     }
 
@@ -151,6 +192,7 @@ export async function POST(request) {
         "failed",
         event.id
       );
+      await failBooking(order, "failed");
       return acknowledge({ failed: Boolean(failed) });
     }
 
@@ -197,6 +239,9 @@ export async function POST(request) {
           : null,
       }
     );
+    // Link the payment back to its booking (idempotent: keyed on paymentStatus).
+    await markBookingPaid(order);
+
     if (!paid) {
       // Already paid by an earlier (possibly concurrent) delivery.
       return acknowledge({ alreadyPaid: true });

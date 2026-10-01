@@ -170,6 +170,11 @@ function BookingDetailModal({ booking, onClose }) {
     { icon: <Clock className="h-4 w-4" />, label: t("admin.detail.preferredTime"), value: `${booking.time || "—"} ${booking.day ? `(${booking.day})` : ""} ${t("common.dhakaTime")}` },
     { icon: <Clock className="h-4 w-4" />, label: t("common.duration"), value: t("common.min", { count: booking.duration || 30 }) },
     { icon: <ShieldAlert className="h-4 w-4" />, label: t("common.status"), value: t("booking.status." + booking.status) },
+    {
+      icon: <ShieldAlert className="h-4 w-4" />,
+      label: t("booking.paymentLabel"),
+      value: t(`payment.status.${booking.paymentStatus || "unpaid"}`),
+    },
   ];
 
   return (

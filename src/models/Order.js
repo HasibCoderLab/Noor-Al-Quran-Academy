@@ -20,6 +20,14 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
       index: true,
     },
+    // Link to the booking this order pays for (null for legacy plan-only orders).
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      default: null,
+      index: true,
+    },
+    course: { type: String, default: null },
     stripeSessionId: { type: String, default: null },
     stripePaymentIntentId: { type: String, default: null },
     stripeEventId: { type: String, default: null },

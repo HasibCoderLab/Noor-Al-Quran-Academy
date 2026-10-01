@@ -190,6 +190,7 @@ const messages = {
   "booking.status.no_show": "No show",
   "booking.status.paid": "Paid",
   "booking.status.unpaid": "Unpaid",
+  "booking.paymentLabel": "Payment",
   "booking.cancel": "Cancel booking",
   "booking.cancelConfirmTitle": "Cancel this booking?",
   "booking.cancelConfirmBody":
@@ -226,6 +227,7 @@ const messages = {
     "No charge was made. You can come back and retry whenever you are ready.",
   "payment.cancelled.retry": "Back to plans",
   "payment.status.pending": "Pending",
+  "payment.status.unpaid": "Unpaid",
   "payment.status.paid": "Paid",
   "payment.status.failed": "Failed",
   "payment.status.refunded": "Refunded",
@@ -402,6 +404,10 @@ const messages = {
   "payment.cancelledBody": "You cancelled the checkout. You can try again anytime.",
   "payment.goDashboard": "Go to dashboard",
   "payment.tryAgain": "Try again",
+  "checkout.title": "Complete your booking",
+  "checkout.subtitle": "Pick a class time, then pay securely to confirm your plan.",
+  "checkout.selectCourse": "Select a course",
+  "checkout.selectSlot": "Select a time slot",
   "payment.reference": "Reference",
   "payment.method": "Method",
 

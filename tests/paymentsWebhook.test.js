@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   findById: vi.fn(),
   findOne: vi.fn(),
   findOneAndUpdate: vi.fn(),
+  bookingUpdateOne: vi.fn(),
+  availabilityUpdateOne: vi.fn(),
 }));
 
 vi.mock("next/server", () => ({
@@ -28,6 +30,12 @@ vi.mock("../src/models/Order.js", () => ({
     findOneAndUpdate: mocks.findOneAndUpdate,
   },
 }));
+vi.mock("../src/models/Booking.js", () => ({
+  default: { updateOne: mocks.bookingUpdateOne },
+}));
+vi.mock("../src/models/Availability.js", () => ({
+  default: { updateOne: mocks.availabilityUpdateOne },
+}));
 
 let post;
 let constructEvent;
@@ -40,6 +48,8 @@ beforeEach(async () => {
   mocks.findById.mockReset().mockResolvedValue(null);
   mocks.findOne.mockReset().mockResolvedValue(null);
   mocks.findOneAndUpdate.mockReset();
+  mocks.bookingUpdateOne.mockReset().mockResolvedValue({ modifiedCount: 1 });
+  mocks.availabilityUpdateOne.mockReset().mockResolvedValue({ modifiedCount: 1 });
 
   constructEvent = vi.fn((payload, signature) => {
     if (signature === "bad-signature") throw new Error("no match");
@@ -298,5 +308,95 @@ describe("POST /api/payments/webhook — order resolution", () => {
     const result = await deliver("checkout.session.completed");
     expect(mocks.findOne).toHaveBeenCalledWith({ stripeSessionId: "cs_1" });
     expect(result.body.paid).toBe(true);
+  });
+});
+
+describe("POST /api/payments/webhook — booking reconciliation", () => {
+  it("marks the linked booking paid on a paid transition", async () => {
+    mocks.findById.mockResolvedValue({ ...ORDER, booking: "booking-1" });
+    mocks.findOneAndUpdate.mockResolvedValue({
+      ...ORDER,
+      status: "paid",
+      booking: "booking-1",
+    });
+
+    const result = await deliver("checkout.session.completed");
+
+    expect(result.body.paid).toBe(true);
+    const [filter, update] = mocks.bookingUpdateOne.mock.calls[0];
+    expect(filter).toEqual({
+      _id: "booking-1",
+      paymentStatus: { $in: ["pending", "unpaid", "failed"] },
+    });
+    expect(update.$set.paymentStatus).toBe("paid");
+  });
+
+  it("leaves a plan-only order's non-existent booking untouched", async () => {
+    mocks.findById.mockResolvedValue({ ...ORDER });
+    mocks.findOneAndUpdate.mockResolvedValue({ ...ORDER, status: "paid" });
+
+    await deliver("checkout.session.completed");
+    expect(mocks.bookingUpdateOne).not.toHaveBeenCalled();
+  });
+
+  it("cancels the linked booking and releases the slot when the session expires", async () => {
+    mocks.findById.mockResolvedValue({ ...ORDER, booking: "booking-1" });
+    mocks.findOneAndUpdate.mockResolvedValue({
+      ...ORDER,
+      status: "expired",
+      booking: "booking-1",
+    });
+
+    const result = await deliver("checkout.session.expired");
+
+    expect(result.body.expired).toBe(true);
+    const [filter, update] = mocks.bookingUpdateOne.mock.calls[0];
+    expect(filter).toEqual({
+      _id: "booking-1",
+      paymentStatus: { $in: ["pending", "unpaid"] },
+    });
+    expect(update.$set).toEqual({ paymentStatus: "failed", status: "cancelled" });
+    expect(mocks.availabilityUpdateOne).toHaveBeenCalledWith(
+      { booking: "booking-1", status: "booked" },
+      { $set: { status: "available", booking: null } }
+    );
+  });
+
+  it("does not release the slot when the booking was already failed", async () => {
+    mocks.bookingUpdateOne.mockResolvedValue({ modifiedCount: 0 });
+    mocks.findById.mockResolvedValue({ ...ORDER, booking: "booking-1" });
+    mocks.findOneAndUpdate.mockResolvedValue({
+      ...ORDER,
+      status: "failed",
+      booking: "booking-1",
+    });
+
+    await deliver("checkout.session.async_payment_failed");
+    expect(mocks.availabilityUpdateOne).not.toHaveBeenCalled();
+  });
+
+  it("marks the linked booking refunded on a full refund", async () => {
+    mocks.findOne.mockResolvedValue({
+      ...ORDER,
+      status: "paid",
+      booking: "booking-1",
+      stripePaymentIntentId: "pi_1",
+    });
+    mocks.findOneAndUpdate.mockResolvedValue({
+      ...ORDER,
+      status: "refunded",
+      booking: "booking-1",
+    });
+
+    const result = await deliver("charge.refunded", {
+      payment_intent: "pi_1",
+      refunded: true,
+    });
+
+    expect(result.body.refunded).toBe(true);
+    expect(mocks.bookingUpdateOne).toHaveBeenCalledWith(
+      { _id: "booking-1", paymentStatus: "paid" },
+      { $set: { paymentStatus: "refunded" } }
+    );
   });
 });
