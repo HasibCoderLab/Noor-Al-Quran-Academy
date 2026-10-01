@@ -6,15 +6,11 @@ import { toPublicUser } from "../../../../lib/jwt";
 import { generateToken } from "../../../../lib/tokens";
 import { sendMail, isEmailConfigured } from "../../../../lib/mailer";
 import { verificationEmail } from "../../../../lib/emailTemplates";
-import { emailVerificationRequired } from "../../../../lib/config";
+import { emailVerificationRequired, siteUrl } from "../../../../lib/config";
 import { rateLimit, clientIp, rateLimitedResponse } from "../../../../lib/rateLimit";
 
 const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.]+$/;
 const EMAIL_TTL_MS = 24 * 60 * 60 * 1000;
-
-function siteUrl(request) {
-  return process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-}
 
 export async function POST(request) {
   try {
@@ -71,7 +67,7 @@ export async function POST(request) {
       );
     }
 
-    const { token, hash } = generateToken();
+    const { token, hash } = requiresVerification ? generateToken() : {};
     const user = await User.create({
       name,
       email,
@@ -85,9 +81,11 @@ export async function POST(request) {
         : undefined,
     });
 
-    const verifyUrl = `${siteUrl(request)}/verify-email?token=${encodeURIComponent(
-      token
-    )}&email=${encodeURIComponent(email)}`;
+    const verifyUrl = requiresVerification
+      ? `${siteUrl(request)}/verify-email?token=${encodeURIComponent(
+          token
+        )}&email=${encodeURIComponent(email)}`
+      : "";
 
     let emailSent = false;
     if (requiresVerification) {

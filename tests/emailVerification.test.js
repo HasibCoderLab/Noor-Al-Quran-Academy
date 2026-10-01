@@ -324,6 +324,18 @@ describe("POST /api/auth/register", () => {
     expect(created.emailVerifyExpires).toBeUndefined();
   });
 
+  it("generates no crypto token at all while the flag is disabled", async () => {
+    const tokens = await import("../src/lib/tokens.js");
+    const spy = vi.spyOn(tokens, "generateToken");
+
+    try {
+      await registerPost(makeRequest(REGISTRATION));
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it("stores no pending token so re-enabling cannot lock the account out", async () => {
     await registerPost(makeRequest(REGISTRATION));
 

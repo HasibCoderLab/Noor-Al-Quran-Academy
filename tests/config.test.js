@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { envReport, allRequiredPresent, effectiveContact } from "../src/lib/config.js";
+import {
+  envReport,
+  allRequiredPresent,
+  effectiveContact,
+  siteUrl,
+} from "../src/lib/config.js";
 
 const TOUCHED = [
   "MONGODB_URI",
@@ -161,6 +166,27 @@ describe("envReport", () => {
     process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
     const { warnings } = envReport();
     expect(warnings.some((w) => w.includes("localhost"))).toBe(true);
+  });
+});
+
+describe("siteUrl", () => {
+  it("strips trailing slashes from NEXT_PUBLIC_SITE_URL", () => {
+    process.env.NEXT_PUBLIC_SITE_URL = "https://noor-al-quran-academy-pi.vercel.app//";
+    expect(siteUrl({ nextUrl: { origin: "https://academy.test" } })).toBe(
+      "https://noor-al-quran-academy-pi.vercel.app"
+    );
+  });
+
+  it("falls back to the request origin when NEXT_PUBLIC_SITE_URL is unset", () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    expect(siteUrl({ nextUrl: { origin: "https://academy.test" } })).toBe(
+      "https://academy.test"
+    );
+  });
+
+  it("tolerates a missing request and returns an empty base", () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL;
+    expect(siteUrl()).toBe("");
   });
 });
 

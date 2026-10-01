@@ -23,6 +23,20 @@ function readEmailVerificationFlag() {
 }
 
 /**
+ * Absolute base URL used in auth emails (verify / reset links).
+ *
+ * Prefers NEXT_PUBLIC_SITE_URL so links keep working behind proxies and in
+ * background jobs; falls back to the request origin. The configured value is
+ * normalized (no trailing slash) so "${base}/verify-email" can never produce
+ * a double slash.
+ */
+export function siteUrl(request) {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) return configured.replace(/\/+$/, "");
+  return request?.nextUrl?.origin || "";
+}
+
+/**
  * Feature flag for the email verification requirement.
  *
  * Temporarily OFF (the default) so that students can register and log in

@@ -1,7 +1,7 @@
 # Production Email Verification — Temporary Disable
 
 **Site:** https://noor-al-quran-academy-pi.vercel.app
-**Status:** Implemented, tested, not committed
+**Status:** Implemented, tested, committed
 **Flag:** `EMAIL_VERIFICATION_REQUIRED` (default `false` — i.e. verification NOT required)
 
 ---

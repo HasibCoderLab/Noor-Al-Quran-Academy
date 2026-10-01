@@ -31,6 +31,18 @@ To re-enable: verify the sending domain in the mail provider, then set
 `EMAIL_VERIFICATION_REQUIRED=true` in the deployment env. Nothing else changes.
 `pnpm doctor` and `/api/health` report the flag state and warn when it is off.
 
+Future custom-domain email activation (no code changes required):
+1. Verify the sending domain in the Resend dashboard (add the SPF/DKIM DNS records it generates).
+2. Set `SMTP_PASS` to a Resend API key and `SMTP_FROM` to an address on the verified domain
+   (e.g. `Noor Al-Quran Academy <noreply@YOUR_DOMAIN>`). Secrets stay server-side only.
+3. Set `NEXT_PUBLIC_SITE_URL` to the production origin (no trailing slash; the shared
+   `siteUrl()` helper in `src/lib/config.js` normalizes it for all auth email links).
+4. Set `EMAIL_VERIFICATION_REQUIRED=true` and redeploy.
+5. Confirm with `pnpm doctor`: "Email verification required — configured" and no SMTP warnings.
+
+Resend note: until the sending domain is verified, Resend only delivers to the account's
+own address. That provider restriction is why the flag is off — it is not an app bug.
+
 ## I18N (Language System)
 
 Library: react-i18next

@@ -5,14 +5,11 @@ import User from "../../../../models/User";
 import { generateToken } from "../../../../lib/tokens";
 import { sendMail, isEmailConfigured } from "../../../../lib/mailer";
 import { passwordResetEmail } from "../../../../lib/emailTemplates";
+import { siteUrl } from "../../../../lib/config";
 import { rateLimit, clientIp, rateLimitedResponse } from "../../../../lib/rateLimit";
 
 const EMAIL_RE = /^[\w.+-]+@[\w-]+\.[\w.]+$/;
 const RESET_TTL_MS = 30 * 60 * 1000;
-
-function siteUrl(request) {
-  return process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
-}
 
 export async function POST(request) {
   try {
