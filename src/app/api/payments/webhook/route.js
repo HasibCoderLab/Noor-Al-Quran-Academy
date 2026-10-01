@@ -4,10 +4,47 @@ import { connectDB } from "../../../../lib/db";
 import { getStripe } from "../../../../lib/stripe";
 import Order from "../../../../models/Order";
 
-const HANDLED_EVENTS = new Set([
+// Events that can move an order into a terminal state. Anything else is
+// acknowledged with 200 so Stripe stops retrying it.
+const PAID_EVENTS = new Set([
   "checkout.session.completed",
-  "checkout.session.expired",
+  "checkout.session.async_payment_succeeded",
 ]);
+const FAILED_EVENTS = new Set(["checkout.session.async_payment_failed"]);
+const EXPIRED_EVENTS = new Set(["checkout.session.expired"]);
+const HANDLED_EVENTS = new Set([
+  ...PAID_EVENTS,
+  ...FAILED_EVENTS,
+  ...EXPIRED_EVENTS,
+]);
+
+// Status an order may hold before a given webhook transition is allowed. The
+// transition itself is applied atomically (see below) so a duplicate or
+// concurrent delivery can never apply the same change twice.
+const PAID_FROM = ["pending", "expired"];
+const EXPIRED_FROM = ["pending"];
+const FAILED_FROM = ["pending"];
+
+function acknowledge(body) {
+  return NextResponse.json({ received: true, ...body });
+}
+
+/**
+ * Atomically applies a status transition only when the order is currently in
+ * one of `from` and is not already at `status`.
+ *
+ * Using a single conditional `findOneAndUpdate` (instead of read-then-save)
+ * makes webhook processing idempotent: Stripe delivers at-least-once and may
+ * retry, but a repeated event finds no matching document and is ignored. The
+ * event id is only stamped on the document that actually made the transition.
+ */
+async function transitionOrder(orderId, from, status, eventId, extra = {}) {
+  return Order.findOneAndUpdate(
+    { _id: orderId, status: { $in: from } },
+    { $set: { status, stripeEventId: eventId, ...extra } },
+    { new: true }
+  );
+}
 
 export async function POST(request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -41,7 +78,7 @@ export async function POST(request) {
   }
 
   if (!HANDLED_EVENTS.has(event.type)) {
-    return NextResponse.json({ received: true, ignored: true });
+    return acknowledge({ ignored: true });
   }
 
   try {
@@ -59,34 +96,41 @@ export async function POST(request) {
 
     if (!order) {
       console.warn("[Payments] Webhook for unknown session:", session.id);
-      return NextResponse.json({ received: true, ignored: true });
+      return acknowledge({ ignored: true });
     }
 
-    if (event.type === "checkout.session.expired") {
-      if (order.status === "pending") {
-        order.status = "expired";
-        order.stripeEventId = event.id;
-        await order.save();
-      }
-      return NextResponse.json({ received: true });
+    if (EXPIRED_EVENTS.has(event.type)) {
+      const expired = await transitionOrder(
+        order._id,
+        EXPIRED_FROM,
+        "expired",
+        event.id
+      );
+      return acknowledge({ expired: Boolean(expired) });
     }
 
-    // checkout.session.completed
-    if (order.status === "paid") {
-      return NextResponse.json({ received: true, alreadyPaid: true });
-    }
-    if (order.stripeEventId === event.id) {
-      return NextResponse.json({ received: true, duplicate: true });
+    if (FAILED_EVENTS.has(event.type)) {
+      const failed = await transitionOrder(
+        order._id,
+        FAILED_FROM,
+        "failed",
+        event.id
+      );
+      return acknowledge({ failed: Boolean(failed) });
     }
 
+    // PAID_EVENTS — never grant paid status on a session that is not paid.
     if (session.payment_status !== "paid") {
       console.warn(
         "[Payments] Session completed without payment:",
         session.id,
         session.payment_status
       );
-      return NextResponse.json({ received: true, ignored: true });
+      return acknowledge({ ignored: true });
     }
+
+    // The server — not the client — decides the real amount. Reject any
+    // session whose total or currency does not match the order we created.
     if (
       session.amount_total !== order.amount ||
       (session.currency || "").toLowerCase() !== order.currency
@@ -101,15 +145,22 @@ export async function POST(request) {
         session.amount_total,
         session.currency
       );
-      return NextResponse.json({ received: true, mismatch: true });
+      return acknowledge({ mismatch: true });
     }
 
-    order.status = "paid";
-    order.paidAt = new Date();
-    order.stripeEventId = event.id;
-    await order.save();
+    const paid = await transitionOrder(
+      order._id,
+      PAID_FROM,
+      "paid",
+      event.id,
+      { paidAt: new Date() }
+    );
+    if (!paid) {
+      // Already paid by an earlier (possibly concurrent) delivery.
+      return acknowledge({ alreadyPaid: true });
+    }
 
-    return NextResponse.json({ received: true, paid: true });
+    return acknowledge({ paid: true });
   } catch (error) {
     console.error("[Payments] Webhook processing error:", error);
     return NextResponse.json(
